@@ -5,13 +5,18 @@ if _VERSION ~= "Lua 5.4" then
 end
 
 local socket = require "socket"
+local control = require "control"
 local proto = require "proto"
 local sproto = require "sproto"
+local common = require "ui_common"
 
 local host = sproto.new(proto.s2c):host "package"
 local request = host:attach(sproto.new(proto.c2s))
 
 local fd = assert(socket.connect("127.0.0.1", "8888"))
+
+local seg = common.seg
+local pre = common.pre
 
 local function send_package(fd, pack)
 	local package = string.pack(">s2", pack)
@@ -100,42 +105,28 @@ local function dispatch_package()
 	return l
 end
 
-
 --send_request("handshake")
 
 os.execute("cls")
-io.write("Welcome to the game! Please enter V to verify your account or enter C to create a new account: ")
+os.execute("title Game")
+os.execute("mode con cols=160 lines=40")
+print(seg..seg)
+io.write(pre.."Welcome to the game! Please enter V to verify your account or enter C to create a new account: ")
 local type = io.read()
-print()
-io.write("id: ")
+print(seg)
+io.write(pre..pre.."ID: ")
 local id = io.read()
-io.write("password: ")
+print()
+io.write(pre..pre.."Password: ")
 local password = io.read()
 local str = type..id.."\n"..password
 
 send_package(fd, str)
-while true do
-	local r = dispatch_package()
-	if r ~= nil then
-		break
-	end
-end
-send_request("getBag")
-while true do
-	local r = dispatch_package()
-	if r ~= nil then
-		break
-	end
-end
+
+--send_request("getBag")
 --send_request("acqBagItem", { id = "item1", amount = 3 })
 --send_request("acqBagItem", { id = "weapon1", amount = 2 })
 --send_request("getBag")
-while true do
-	local r = dispatch_package()
-	if r ~= nil then
-		break
-	end
-end
 
 while true do
 	dispatch_package()
@@ -147,6 +138,6 @@ while true do
 			send_request("hget", { key = cmd })
 		end
 	else
-		socket.usleep(100)
+		socket.sleep(100)
 	end
 end

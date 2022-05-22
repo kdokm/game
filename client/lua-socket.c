@@ -2,10 +2,10 @@
 
 #include "lua.h"
 #include "lauxlib.h"
-#include "sock.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <ws2tcpip.h>
 
 #define CACHE_SIZE 0x1000	
 
@@ -21,7 +21,7 @@ lconnect(lua_State *L) {
 		return luaL_error(L, "Startup %s %d failed", addr, port);
 	}
 
-    struct addrinfo *result = NULL;
+	struct addrinfo *result = NULL;
 	struct addrinfo hints;
 
 	ZeroMemory(&hints, sizeof(hints));
@@ -35,14 +35,14 @@ lconnect(lua_State *L) {
 		return luaL_error(L, "Getaddr %s %d failed", addr, port);
 	}
 
-    SOCKET sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (INVALID_SOCKET == sock)
+	SOCKET sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+	if (INVALID_SOCKET == sock)
 	{
-        freeaddrinfo(result);
+		freeaddrinfo(result);
 		return luaL_error(L, "Socket %s %d failed", addr, port);
 	}
 
-    ret = connect(sock, result->ai_addr, (int)result->ai_addrlen);
+	ret = connect(sock, result->ai_addr, (int)result->ai_addrlen);
 	if (SOCKET_ERROR == ret)
 	{
 		freeaddrinfo(result);
@@ -50,7 +50,7 @@ lconnect(lua_State *L) {
 		return luaL_error(L, "Connect %s %d failed", addr, port);
 	}
 
-    freeaddrinfo(result);
+	freeaddrinfo(result);
 	lua_pushinteger(L, (int)sock);
 
 	return 1;
@@ -70,7 +70,7 @@ block_send(lua_State *L, unsigned int sock, const char * buffer, int sz) {
 		int ret = send(sock, buffer, sz, 0);
 		if (SOCKET_ERROR == ret) {
 			int err = WSAGetLastError();
-			if (err == EAGAIN || errno == EINTR)
+			if (err == WSAEWOULDBLOCK || errno == WSAEINTR)
 				continue;
 			luaL_error(L, "send error: %s", strerror(err));
 
@@ -123,7 +123,7 @@ lrecv(lua_State *L) {
 	}
 	if (ret < 0) {
 		int err = WSAGetLastError();
-		if (err == EAGAIN || err == EINTR) {
+		if (err == WSAEWOULDBLOCK || err == WSAEINTR) {
 			return 0;
 		}
 		luaL_error(L, "recv error: %s", strerror(err));
@@ -133,7 +133,7 @@ lrecv(lua_State *L) {
 }
 
 static int
-lusleep(lua_State *L) {
+lsleep(lua_State *L) {
 	int n = luaL_checknumber(L, 1);
 	Sleep(n);
 	return 0;
@@ -147,7 +147,7 @@ luaopen_socket(lua_State *L) {
 		{ "recv", lrecv },
 		{ "send", lsend },
 		{ "close", lclose },
-		{ "usleep", lusleep },
+		{ "sleep", lsleep },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
