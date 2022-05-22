@@ -1,24 +1,21 @@
-package.cpath = "./luaclib/?.so"
-package.path = "./lualib/?.lua;../service/?.lua"
+package.path = package.path..";../common/?.lua"..";../common/sproto/?.lua"
 
 if _VERSION ~= "Lua 5.4" then
 	error "Use lua 5.4"
 end
 
-local socket = require "client.socket"
+local socket = require "socket"
 local proto = require "proto"
 local sproto = require "sproto"
 
 local host = sproto.new(proto.s2c):host "package"
 local request = host:attach(sproto.new(proto.c2s))
 
-local fd = assert(socket.connect("127.0.0.1", 8888))
+local fd = assert(socket.connect("127.0.0.1", "8888"))
 
 local function send_package(fd, pack)
 	local package = string.pack(">s2", pack)
 	assert(fd)
-	print("send")
-	io.write(package)
 	socket.send(fd, package)
 end
 
@@ -105,7 +102,18 @@ end
 
 
 --send_request("handshake")
-send_package(fd, "Ckkk\npass")
+
+os.execute("cls")
+io.write("Welcome to the game! Please enter V to verify your account or enter C to create a new account: ")
+local type = io.read()
+print()
+io.write("id: ")
+local id = io.read()
+io.write("password: ")
+local password = io.read()
+local str = type..id.."\n"..password
+
+send_package(fd, str)
 while true do
 	local r = dispatch_package()
 	if r ~= nil then
