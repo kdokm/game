@@ -51,6 +51,15 @@ lconnect(lua_State *L) {
 	}
 
 	freeaddrinfo(result);
+
+	unsigned long ul = 1;
+	ret=ioctlsocket(sock, FIONBIO, (unsigned long *)&ul);
+	if(SOCKET_ERROR == ret)  
+	{  
+		closesocket(sock);
+		return luaL_error(L, "Set non-blocking %s %d failed", addr, port);
+	}
+
 	lua_pushinteger(L, (int)sock);
 
 	return 1;
@@ -132,22 +141,14 @@ lrecv(lua_State *L) {
 	return 1;
 }
 
-static int
-lsleep(lua_State *L) {
-	int n = luaL_checknumber(L, 1);
-	Sleep(n);
-	return 0;
-}
-
 LUAMOD_API int
-luaopen_socket(lua_State *L) {
+luaopen_lsocket(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "connect", lconnect },
 		{ "recv", lrecv },
 		{ "send", lsend },
 		{ "close", lclose },
-		{ "sleep", lsleep },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

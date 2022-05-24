@@ -1,111 +1,37 @@
-package.path = package.path..";../common/?.lua"..";../common/sproto/?.lua"
+package.path = package.path..";../common/?.lua"
 
 if _VERSION ~= "Lua 5.4" then
 	error "Use lua 5.4"
 end
 
+local lcontrol = require "lcontrol"
 local socket = require "socket"
-local control = require "control"
-local proto = require "proto"
-local sproto = require "sproto"
+local message = require "message"
 local common = require "ui_common"
-
-local host = sproto.new(proto.s2c):host "package"
-local request = host:attach(sproto.new(proto.c2s))
-
-local fd = assert(socket.connect("127.0.0.1", "8888"))
 
 local seg = common.seg
 local pre = common.pre
 
-local function send_package(fd, pack)
-	local package = string.pack(">s2", pack)
-	assert(fd)
-	socket.send(fd, package)
+local IP = ...
+
+IP = IP or "127.0.0.1"
+
+message.register(string.format("../common/sproto/proto"))
+
+message.peer(IP, 8888)
+message.connect()
+
+local event = {}
+
+message.bind({}, event)
+
+function event:__error(what, err, req, session)
+	print("error", what, err)
 end
 
-local function unpack_package(text)
-	local size = #text
-	if size < 2 then
-		return nil, text
-	end
-	local s = text:byte(1) * 256 + text:byte(2)
-	if size < s+2 then
-		return nil, text
-	end
-
-	return text:sub(3,2+s), text:sub(3+s)
+function event:push(args)
+	print("server push", args.text)
 end
-
-local function recv_package(last)
-	local result
-	result, last = unpack_package(last)
-	if result then
-		return result, last
-	end
-	local r = socket.recv(fd)
-	if not r then
-		return nil, last
-	end
-	if r == "" then
-		error "Server closed"
-	end
-	return unpack_package(last .. r)
-end
-
-local session = 0
-
-local function send_request(name, args)
-	session = session + 1
-	local str = request(name, args, session)
-	send_package(fd, str)
-	print("Request:", session)
-end
-
-local last = ""
-
-local function print_request(name, args)
-	print("REQUEST", name)
-	if args then
-		for k,v in pairs(args) do
-			print(k,v)
-		end
-	end
-end
-
-local function print_response(session, args)
-	print("RESPONSE", session)
-	if args then
-		for k,v in pairs(args) do
-			print(k,v)
-		end
-	end
-end
-
-local function print_package(t, ...)
-	if t == "REQUEST" then
-		--print_request(...)
-	else
-		assert(t == "RESPONSE")
-		print_response(...)
-	end
-end
-
-local function dispatch_package()
-	local l
-	while true do
-		local v
-		v, last = recv_package(last)
-		if not v then
-			break
-		end
-		l = v
-		print_package(host:dispatch(v))
-	end
-	return l
-end
-
---send_request("handshake")
 
 os.execute("cls")
 os.execute("title Game")
@@ -119,25 +45,20 @@ local id = io.read()
 print()
 io.write(pre..pre.."Password: ")
 local password = io.read()
-local str = type..id.."\n"..password
 
-send_package(fd, str)
+socket.write(type..id.."\n"..password)
+local status = socket.read()
+while not status do
+	status = socket.read()
+end
+print(status)
 
---send_request("getBag")
---send_request("acqBagItem", { id = "item1", amount = 3 })
---send_request("acqBagItem", { id = "weapon1", amount = 2 })
---send_request("getBag")
+--message.request("getBag")
+--message.request("acqBagItem", { id = "item1", amount = 3 })
+--message.request("acqBagItem", { id = "weapon1", amount = 2 })
+--message.request("getBag")
 
 while true do
-	dispatch_package()
-	local cmd = socket.readstdin()
-	if cmd then
-		if cmd == "quit" then
-			send_request("quit")
-		else
-			send_request("hget", { key = cmd })
-		end
-	else
-		socket.sleep(100)
-	end
+	message.update()
+	lcontrol.sleep(100)
 end

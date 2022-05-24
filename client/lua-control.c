@@ -24,12 +24,20 @@ lget_key_state(lua_State *L) {
 	return 1;
 }
 
+static int
+lsleep(lua_State *L) {
+	int n = luaL_checknumber(L, 1);
+	Sleep(n);
+	return 0;
+}
+
 LUAMOD_API int
-luaopen_control(lua_State *L) {
+luaopen_lcontrol(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "jump", ljump },
 		{ "get_key_state", lget_key_state },
+		{ "sleep", lsleep },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

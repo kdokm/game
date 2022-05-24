@@ -60,7 +60,11 @@ proto.s2c = sprotoparser.parse [[
 
 heartbeat 1 {}
 
-ok 2 {}
+ok 2 {
+	request {
+		status 0  : boolean
+	}
+}
 
 ]]
 

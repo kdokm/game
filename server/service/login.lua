@@ -1,8 +1,14 @@
 local skynet = require "skynet"
+local socket = require "skynet.socket"
 
 local CMD = {}
 local gate
 local watchdog
+
+local function send_package(fd, pack)
+	local package = string.pack(">s2", pack)
+	socket.write(fd, package)
+end
 
 function CMD.start(conf)
 	gate = conf.gate
@@ -22,11 +28,13 @@ function CMD.open(fd, msg, flag)
 	if flag == "V" then
 		local ret = skynet.call("mongo", "lua", "get", "A", id, "password")
 		if ret ~= password then
+			send_package(fd, "wrong password")
 			return
 		end
 	else
 		--TODO: register new user
 		--skynet.call("mongo", "lua", "set", "A", id, "password", password)
+		send_package(fd, "ok")
 	end
 
 	local agent = skynet.newservice("agent")
