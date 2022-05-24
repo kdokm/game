@@ -14,7 +14,7 @@ local armor = {
 
 function armor.isArmor(id)
 	local i = string.sub(id, 1, 1)
-	if i == # then
+	if i == '#' then
 		return true
 	else
 		return false

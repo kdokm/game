@@ -5,7 +5,6 @@ local sprotoloader = require "sprotoloader"
 local weapon = require "weapon"
 local armor = require "armor"
 local bag = require "bag"
-local panel = require "panel"
 
 local WATCHDOG
 local host
@@ -130,7 +129,6 @@ skynet.register_protocol {
 			else
 				skynet.error(result)
 			end
-		elseif type == "RESPONSE" then
 		else
 			skynet.error("invalid message")
 		end
@@ -154,9 +152,8 @@ function CMD.start(conf)
 	client_id = conf.id
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
-	equips = bag.init(client_id)
-	attr.init(client_id)
-	send_package(send_request "ok")
+	--equips = bag.init(client_id)
+	--attr.init(client_id)
 end
 
 function CMD.disconnect()

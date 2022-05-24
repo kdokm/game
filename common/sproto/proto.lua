@@ -60,8 +60,6 @@ proto.s2c = sprotoparser.parse [[
 
 heartbeat 1 {}
 
-ok 2 {}
-
 ]]
 
 return proto
