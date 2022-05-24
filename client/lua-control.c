@@ -18,9 +18,9 @@ ljump(lua_State *L) {
 }
 
 static int
-lget_key_state(lua_State *L) {
+lcheck_pressed(lua_State *L) {
 	const int key = luaL_checkinteger(L, 1);
-	lua_pushinteger(L, GetAsyncKeyState(key));
+	lua_pushboolean(L, GetAsyncKeyState(key)&1);
 	return 1;
 }
 
@@ -36,7 +36,7 @@ luaopen_lcontrol(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "jump", ljump },
-		{ "get_key_state", lget_key_state },
+		{ "check_pressed", lcheck_pressed },
 		{ "sleep", lsleep },
 		{ NULL, NULL },
 	};

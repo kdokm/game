@@ -1,6 +1,6 @@
 local common = {
 	seg = "\n\n\n\n\n",
-	pre = "                         "
+	pre = "                    "
 }
 
 function common.print_line()
