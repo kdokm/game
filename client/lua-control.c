@@ -18,9 +18,61 @@ ljump(lua_State *L) {
 }
 
 static int
-lget_key_state(lua_State *L) {
-	const int key = luaL_checkinteger(L, 1);
-	lua_pushinteger(L, GetAsyncKeyState(key));
+lget_pressed(lua_State *L) {
+	DWORD cNumRead, fdwSaveOldMode, fdwMode, i;
+	INPUT_RECORD irInBuf[128];
+
+	// Get the standard input handle.
+	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	if (hStdin == INVALID_HANDLE_VALUE)
+		return luaL_error(L, "GetStdHandle failed");
+
+	// Save the current input mode, to be restored on exit.
+	if (! GetConsoleMode(hStdin, &fdwSaveOldMode) )
+        		return luaL_error(L, "GetConsoleMode failed");
+
+    	// Enable the window input events.
+	fdwMode = ENABLE_WINDOW_INPUT;
+    	if (! SetConsoleMode(hStdin, fdwMode) )
+        		return luaL_error(L, "SetConsoleMode failed");
+
+	if (! ReadConsoleInput(
+                	hStdin,      // input buffer handle
+                	irInBuf,     // buffer to read into
+                	128,         // size of read buffer
+                	&cNumRead) ) // number of records read
+            		return luaL_error(L, "ReadConsoleInput failed");
+
+	char buffer[128];
+	memset(buffer, 0, sizeof(buffer));
+	int count = 0;
+
+        	for (i = 0; i < cNumRead; i++)
+        	{
+            		switch(irInBuf[i].EventType)
+            		{
+                	case KEY_EVENT: // keyboard input
+			if (!irInBuf[i].Event.KeyEvent.bKeyDown) {
+				buffer[count++] = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+			}
+                    		break;
+
+                	case WINDOW_BUFFER_SIZE_EVENT: // disregard buf. resizing
+                    		break;
+
+                	case FOCUS_EVENT:  // disregard focus events
+			break;
+
+                	case MENU_EVENT:   // disregard menu events
+                    		break;
+
+                	default:
+                    		return luaL_error(L, "Unknown event type");
+                    		break;
+            		}
+        	}
+
+	lua_pushlstring(L, buffer, count);
 	return 1;
 }
 
@@ -36,7 +88,7 @@ luaopen_lcontrol(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "jump", ljump },
-		{ "get_key_state", lget_key_state },
+		{ "get_pressed", lget_pressed },
 		{ "sleep", lsleep },
 		{ NULL, NULL },
 	};
