@@ -13,6 +13,10 @@ local map = require "ui_map"
 local seg = common.seg
 local pre = common.pre
 
+local control_func = {
+	m = map.control
+}
+
 local IP = ...
 
 IP = IP or "127.0.0.1"
@@ -39,10 +43,10 @@ local function login()
 	io.write("Welcome to the game! Please enter V to verify your account or enter C to create a new account: ")
 	local type = io.read()
 	io.write(seg)
-	io.write(pre..pre..pre.."ID: ")
+	io.write(pre..pre.."ID: ")
 	local id = io.read()
 	print()
-	io.write(pre..pre..pre.."Password: ")
+	io.write(pre..pre.."Password: ")
 	local password = io.read()
 
 	socket.write(type..id.."\n"..password)
@@ -56,7 +60,7 @@ end
 local function to_map()
 	os.execute("cls")
 	map.print_options()
-	status = "m"
+	return "m"
 end
 
 os.execute("cls")
@@ -69,7 +73,7 @@ while status ~= "ok" do
 	print(status.."! Please try again!")
 	login()
 end
-to_map()
+status = to_map()
 
 --message.request("getBag")
 --message.request("acqBagItem", { id = "item1", amount = 3 })
@@ -77,6 +81,10 @@ to_map()
 --message.request("getBag")
 
 while true do
+	local flag = control_func[status](lcontrol.get_pressed())
+	if flag then
+		break
+	end
 	message.update()
 	lcontrol.sleep(100)
 end
