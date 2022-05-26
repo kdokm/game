@@ -8,13 +8,13 @@ local lcontrol = require "lcontrol"
 local socket = require "socket"
 local message = require "message"
 local common = require "ui_common"
-local map = require "ui_map"
+local world = require "ui_world"
 
 local seg = common.seg
 local pre = common.pre
 
 local func = {
-	m = map
+	w = world
 }
 
 local IP = ...
@@ -72,7 +72,7 @@ while status ~= "ok" do
 	print(status.."! Please try again!")
 	login()
 end
-status = "m"
+status = "w"
 transition(status)
 
 --message.request("getBag")

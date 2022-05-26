@@ -3,7 +3,7 @@ local message = require "message"
 local common = require "ui_common"
 --local monster = require "monster"
 
-local map = {}
+local world = {}
 local pre = common.pre
 
 local currX = -1
@@ -11,7 +11,7 @@ local currY = -1
 local currHp = -1
 local currMp = -1
 
-function map.print_init()
+function world.print_init()
 	print("\n")
 	common.print_line()
 	lcontrol.jump(0, 34)
@@ -52,7 +52,7 @@ function map.print_update(x, y, hp, mp, updates)
 	end
 end
 
-function map.control(cmd)
+function world.control(cmd)
 	for c in cmd:gmatch"." do
 		if c == "e" then
 			return true
@@ -65,4 +65,4 @@ function map.control(cmd)
 	return false
 end
 
-return map
+return world
