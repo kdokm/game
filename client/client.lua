@@ -8,13 +8,13 @@ local lcontrol = require "lcontrol"
 local socket = require "socket"
 local message = require "message"
 local common = require "ui_common"
-local map = require "ui_map"
+local world = require "ui_world"
 
 local seg = common.seg
 local pre = common.pre
 
-local control_func = {
-	m = map.control
+local func = {
+	w = world
 }
 
 local IP = ...
@@ -57,10 +57,9 @@ local function login()
 	return status
 end
 
-local function to_map()
+local function transition(status)
 	os.execute("cls")
-	map.print_options()
-	return "m"
+	func[status].print_init()
 end
 
 os.execute("cls")
@@ -73,7 +72,8 @@ while status ~= "ok" do
 	print(status.."! Please try again!")
 	login()
 end
-status = to_map()
+status = "w"
+transition(status)
 
 --message.request("getBag")
 --message.request("acqBagItem", { id = "item1", amount = 3 })
@@ -81,7 +81,7 @@ status = to_map()
 --message.request("getBag")
 
 while true do
-	local flag = control_func[status](lcontrol.get_pressed())
+	local flag = func[status].control(lcontrol.get_pressed())
 	if flag then
 		break
 	end

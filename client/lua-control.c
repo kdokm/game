@@ -53,7 +53,17 @@ lget_pressed(lua_State *L) {
             		{
                 	case KEY_EVENT: // keyboard input
 			if (!irInBuf[i].Event.KeyEvent.bKeyDown) {
-				buffer[count++] = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+				WORD vCode = irInBuf[i].Event.KeyEvent.wVirtualKeyCode;
+				if (vCode == VK_ESCAPE) {
+					buffer[count++] = 'e';
+				} else if (vCode == VK_SPACE) {
+					buffer[count++] = 'p';
+				} else {
+					char c = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+					if (c != ' ' && c != 'e') {
+						buffer[count++] = c;
+					}
+				}
 			}
                     		break;
 
