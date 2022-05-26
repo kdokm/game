@@ -57,7 +57,7 @@ local function login()
 	return status
 end
 
-local function transition()
+local function transition(status)
 	os.execute("cls")
 	func[status].print_init()
 end
@@ -73,7 +73,7 @@ while status ~= "ok" do
 	login()
 end
 status = "m"
-transition()
+transition(status)
 
 --message.request("getBag")
 --message.request("acqBagItem", { id = "item1", amount = 3 })

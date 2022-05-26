@@ -59,7 +59,10 @@ lget_pressed(lua_State *L) {
 				} else if (vCode == VK_SPACE) {
 					buffer[count++] = 'p';
 				} else {
-					buffer[count++] = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+					char c = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+					if (c != ' ' && c != 'e') {
+						buffer[count++] = c;
+					}
 				}
 			}
                     		break;

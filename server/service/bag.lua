@@ -129,7 +129,7 @@ function bag.acqItem(id, amount)
 		assert(val <= 999, "cannot get more item!") 
 		r = string.sub(r, 1, posEnd)..utils.genStr(val)..string.sub(r, amountEnd+1)
 		skynet.call("redis", "lua", "hset", "B", client_id, id, r)
-                 end
+                end
 	return true
 end
 
