@@ -13,7 +13,7 @@ local world = require "ui_world"
 local seg = common.seg
 local pre = common.pre
 
-local func = {
+local funcs = {
 	w = world
 }
 
@@ -35,7 +35,9 @@ function event:__error(what, err, req, session)
 end
 
 function event:push(args)
-	print("server push", args.text)
+	--print(args.x)
+	--print(args.hp)
+	funcs[status].print_update(args)
 end
 
 local function login()
@@ -57,15 +59,15 @@ local function login()
 	return status
 end
 
-local function transition(status)
+local function transition()
 	os.execute("cls")
-	func[status].print_init()
+	funcs[status].print_init()
 end
 
 os.execute("cls")
 os.execute("title Game")
 os.execute("mode con cols=160 lines=40")
-local status = login()
+status = login()
 while status ~= "ok" do
 	os.execute("cls")
 	lcontrol.jump(0, 39)
@@ -73,7 +75,7 @@ while status ~= "ok" do
 	login()
 end
 status = "w"
-transition(status)
+transition()
 
 --message.request("getBag")
 --message.request("acqBagItem", { id = "item1", amount = 3 })
@@ -81,7 +83,7 @@ transition(status)
 --message.request("getBag")
 
 while true do
-	local flag = func[status].control(lcontrol.get_pressed())
+	local flag = funcs[status].control(lcontrol.get_pressed())
 	if flag then
 		break
 	end

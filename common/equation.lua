@@ -8,6 +8,28 @@ for k, v in pairs(detail) do
 	detail[k] = string.sub(v, 1, attach["attrDigit"])
 end
 
+function equation.getInitAttrVal()
+	return 5
+end
+
+local function calHP(en, spr)
+	return en * 50 + spr * 50
+end
+
+local function calMP(spr)
+	return spr * 50
+end
+
+function equation.getInitHP()
+	local attr = equation.getInitAttrVal()
+	return calHP(attr, attr)
+end
+
+function equation.getInitMP()
+	local attr = equation.getInitAttrVal()
+	return calMP(attr)
+end
+
 function equation.calFreeAttrs(attrs)
 	local total = attrs["level"] * 10
 	for k, v in pairs(attrs) do
@@ -57,8 +79,8 @@ end
 function equation.calDetail(basic_attrs, equips)
 	local eq_attrs = calEquips(equips)
 	detailed_attrs = {
-		hp = basic_attrs["end"] * 50 + basic_attrs["spr"] * 50 + eq_attrs["h"],
-		mp = basic_attrs["spr"] * 50 + eq_attrs["m"],
+		hp = calHP(basic_attrs["end"], basic_attrs["spr"]) + eq_attrs["h"],
+		mp = calMP(basic_attrs["spr"]) + eq_attrs["m"],
 		atk = basic_attrs["str"] * 10 + eq_attrs["a"],
 		def = basic_attrs["end"] * 5 + eq_attrs["d"],
 		spd = basic_attrs["dex"] * 10 + eq_attrs["s"]

@@ -48,7 +48,14 @@ acqBagItem 6 {
 	}
 }
 
-quit 7 {}
+move 7 {
+	request {
+		x 0 : integer
+		y 1 : integer
+	}
+}
+
+quit 8 {}
 
 ]]
 
@@ -58,7 +65,24 @@ proto.s2c = sprotoparser.parse [[
 	session 1 : integer
 }
 
+.update {
+	x 0 : integer
+	y 1 : integer
+	hp 2 : integer
+	id 3 : string
+}
+
 heartbeat 1 {}
+
+push 2 {
+	request {
+		x 0 : integer
+		y 1 : integer
+		hp 2 : integer
+		mp 3 : integer
+		updates 4 : *update
+	}
+}
 
 ]]
 
