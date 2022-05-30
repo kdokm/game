@@ -5,6 +5,7 @@ local sprotoloader = require "sprotoloader"
 local weapon = require "weapon"
 local armor = require "armor"
 local bag = require "bag"
+local attr = require "attr"
 
 local WATCHDOG
 local host
@@ -82,6 +83,11 @@ function REQUEST:acqBagItem()
 	end
 end
 
+function REQUEST:move(x, y)
+	attr.move(x, y)
+	aoi.update(client_id, x, y)
+end
+
 function REQUEST:buyItem(id)
 	--skynet.call("trade", "lua", "buy", id)
 end
@@ -153,7 +159,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	--attr.init(client_id)
+	attr.init(client_id)
 end
 
 function CMD.disconnect()

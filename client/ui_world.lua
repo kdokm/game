@@ -56,8 +56,14 @@ function world.control(cmd)
 	for c in cmd:gmatch"." do
 		if c == "e" then
 			return true
-		elseif c == "w" or c == "s" or c == "a" or c == "d" then
-			--message.request("move", { dir = c })
+		elseif c == "w" then
+			message.request("move", { x = -1, y = 0 })
+		elseif c == "s" then
+			message.request("move", { x = 0, y = -1 })
+		elseif c == "a" then
+			message.request("move", { x = 1, y = 0 })
+		elseif c == "d" then
+			message.request("move", { x = 0, y = 1 })
 		elseif c == "p" then
 			--message.requset("attack")
 		end

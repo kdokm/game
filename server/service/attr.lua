@@ -1,11 +1,11 @@
 local skynet = require "skynet"
 local equation = require "equation"
 
-local panel = {}
+local attr = {}
 local client_id
 local posDigit = 3
 
-function panel.init(id)
+function attr.init(id)
 	client_id = id
 end
 
@@ -17,7 +17,7 @@ local function addDetail(attrs, equips)
 	return attrs
 end
 
-function panel.getAttr(equips)
+function attr.getAttr(equips)
 	skynet.error("get attr info")
 	local r = skynet.call("redis", "lua", "hgetall", "A", client_id)
 	r["free"] = equation.calFreeAttrs(r)
@@ -25,30 +25,29 @@ function panel.getAttr(equips)
 	return r
 end
 
-function panel.updateAttr(attrs)
+function attr.updateAttr(attrs)
 	for k, v in pairs(attrs) do
 		skynet.call("redis", "lua", "hset", "A", client_id, k, v)
 	end
 end
 
-function panel.getSkill()
+function attr.getSkill()
 end
 
-function panel.updateSkill()
+function attr.updateSkill()
 end
 
-function panel.getPos()
+function attr.getPos()
 	local r = skynet.call("redis", "lua", "get", "P", client_id)
 	return r
 end
 
-function panel.move(command)
+function attr.move(x, y)
 	local r = getPos()
-	local x = tonumber(string.sub(command, 1, posDigit)) + tonumber(string.sub(command, 1, 1))
-	local y = tonumber(string.sub(command, posDigit+1)) + tonumber(string.sub(command, 2, 2))
-	assert(x ~= nil and y ~= nil, "bad command")
-	r = utils.genStr(x, posDigit)..utils.genStr(y, posDigit)
+	local newX = tonumber(string.sub(r, 1, posDigit)) + x
+	local newY = tonumber(string.sub(r, posDigit+1)) + y
+	r = utils.genStr(newX, posDigit)..utils.genStr(newY, posDigit)
 	skynet.call("redis", "lua", "set", "P", client_id, r)
 end
 
-return panel
+return attr
