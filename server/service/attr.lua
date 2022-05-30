@@ -8,7 +8,7 @@ local posDigit = 3
 
 function attr.getPos()
 	local r = skynet.call("redis", "lua", "get", "P", client_id)
-	if r == nil
+	if r == nil then
 		return nil, nil
 	end
 	local x = tonumber(string.sub(r, 1, posDigit))
@@ -29,6 +29,9 @@ end
 
 function attr.getCurrHP()
 	local r = skynet.call("redis", "lua", "get", "H", client_id)
+	if r == nil then
+		return nil
+	end
 	return tonumber(r)
 end
 
@@ -43,6 +46,9 @@ end
 
 function attr.getCurrMP()
 	local r = skynet.call("redis", "lua", "get", "H", client_id)
+	if r == nil then
+		return nil
+	end
 	return tonumber(r)
 end
 

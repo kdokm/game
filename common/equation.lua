@@ -12,11 +12,11 @@ function equation.getInitAttrVal()
 	return 5
 end
 
-local function calHP(end, spr)
-	return end * 50 + spr * 50
+local function calHP(en, spr)
+	return en * 50 + spr * 50
 end
 
-local function calMP()
+local function calMP(spr)
 	return spr * 50
 end
 

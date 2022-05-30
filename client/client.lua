@@ -35,7 +35,8 @@ function event:__error(what, err, req, session)
 end
 
 function event:push(args)
-	print("server push", args.text)
+	--print(args.x)
+	--print(args.hp)
 	funcs[status].print_update(args)
 end
 
