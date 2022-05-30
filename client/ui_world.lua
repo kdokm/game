@@ -40,8 +40,9 @@ local function print_update_bar(x, y, hp, mp)
 	end
 end
 
-function world.print_update(x, y, hp, mp, updates)
-	print_update_bar(x, y, hp, mp)
+function world.print_update(args)
+	print_update_bar(args.x, args.y, args.hp, args.mp)
+	local updates = args.updates
 	if updates == nil then
 		return
 	end

@@ -75,7 +75,7 @@ proto.s2c = sprotoparser.parse [[
 heartbeat 1 {}
 
 push 2 {
-	response {
+	request {
 		x 0 : integer
 		y 1 : integer
 		hp 2 : integer

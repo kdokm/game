@@ -160,7 +160,7 @@ function CMD.start(conf)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
 	local r = attr.init(client_id)
-	send_package(send_request("push", r.x, r.y, r.hp, r.mp, nil))
+	send_package(send_request("push", r))
 end
 
 function CMD.disconnect()
