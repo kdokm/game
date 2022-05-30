@@ -159,7 +159,8 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	attr.init(client_id)
+	local r = attr.init(client_id)
+	send_package(send_request("push", r.x, r.y, r.hp, r.mp, nil)
 end
 
 function CMD.disconnect()
