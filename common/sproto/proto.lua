@@ -74,8 +74,6 @@ proto.s2c = sprotoparser.parse [[
 
 heartbeat 1 {}
 
-]]
-
 push 2 {
 	response {
 		x 0 : integer
@@ -85,5 +83,7 @@ push 2 {
 		updates 4 : *update
 	}
 }
+
+]]
 
 return proto
