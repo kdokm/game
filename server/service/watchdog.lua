@@ -70,6 +70,7 @@ skynet.start(function()
 		end
 	end)
 
+	skynet.newservice("scene")
 	skynet.newservice("aoi")
 	gate = skynet.newservice("gate")
 	login = skynet.newservice("login")
