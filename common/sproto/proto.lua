@@ -66,10 +66,10 @@ proto.s2c = sprotoparser.parse [[
 }
 
 .update {
-	x 0 : integer
-	y 1 : integer
-	hp 2 : integer
-	id 3 : string
+	id 0 : string
+	x 1 : integer
+	y 2 : integer
+	hp 3 : integer
 }
 
 heartbeat 1 {}

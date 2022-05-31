@@ -6,11 +6,14 @@ local attr = {}
 local client_id
 local posDigit = 3
 
+hp = nil
+
 function attr.getPos()
 	local r = skynet.call("redis", "lua", "get", "P", client_id)
 	if r == nil then
 		return nil, nil
 	end
+	skynet.error(r)
 	local x = tonumber(string.sub(r, 1, posDigit))
 	local y = tonumber(string.sub(r, posDigit+1))
 	return x, y
@@ -41,6 +44,7 @@ local function getInitHP()
 		r = equation.getInitHP()
 		skynet.call("redis", "lua", "set", "H", client_id, tostring(r))
 	end
+	hp = r
 	return r
 end
 
@@ -99,12 +103,13 @@ function attr.updateSkill()
 end
 
 function attr.move(x, y)
-	local newX, newY = getPos()
+	local newX, newY = attr.getPos()
 	assert(newX ~= nil)
 	newX = newX + x
 	newY = newY + y
 	r = utils.genStr(newX, posDigit)..utils.genStr(newY, posDigit)
 	skynet.call("redis", "lua", "set", "P", client_id, r)
+	skynet.call("aoi", "lua", "update", client_id, newX, newY, hp)
 end
 
 return attr

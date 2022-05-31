@@ -4,15 +4,17 @@ require "skynet.manager"
 local CMD = {}
 local db
 
-function CMD.get(key)
+function CMD.get(col, key)
 	--if ~db:exists(key)
 		--local r = skynet.call("mongodb", "lua", "get", self.key)
 		
 	--end
+	return db:get(col..key)
 end
 
-function CMD.set(key, value)
-
+function CMD.set(col, key, value)
+	skynet.error("set")
+	db:set(col..key, value)
 end
 
 function CMD.hget(col, key, field)
@@ -25,7 +27,7 @@ function CMD.hget(col, key, field)
                                 end
 		db:hset(col..key, field, r)
 		return r
-                end
+                	end
 	return db:hget(col..key, field)
 end
 

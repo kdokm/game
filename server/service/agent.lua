@@ -31,15 +31,6 @@ end
 function REQUEST:updateSkill()
 end
 
-function REQUEST:getPos()
-	return { result = panel.getPos() }
-end
-
-function REQUEST:move()
-	assert(string.len(self.command) == 6, "bad command")
-	panel.move(self.command)
-end
-
 function REQUEST:getBag()
 	skynet.error("get bag info")
 	return { result = bag.get() }
@@ -83,9 +74,8 @@ function REQUEST:acqBagItem()
 	end
 end
 
-function REQUEST:move(x, y)
-	attr.move(x, y)
-	aoi.update(client_id, x, y)
+function REQUEST:move()
+	attr.move(self.x, self.y)
 end
 
 function REQUEST:buyItem(id)
@@ -160,6 +150,8 @@ function CMD.start(conf)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
 	local r = attr.init(client_id)
+	skynet.call("aoi", "lua", "update", client_id, r.x, r.y, r.hp)
+	r.updates = skynet.call("aoi", "lua", "get", client_id)
 	send_package(send_request("push", r))
 end
 
