@@ -19,7 +19,7 @@ ljump(lua_State *L) {
 
 static int
 lget_pressed(lua_State *L) {
-	DWORD cNumRead, fdwSaveOldMode, fdwMode, i;
+	DWORD cNum, cNumRead, fdwSaveOldMode, fdwMode, i;
 	INPUT_RECORD irInBuf[128];
 
 	// Get the standard input handle.
@@ -36,51 +36,58 @@ lget_pressed(lua_State *L) {
     	if (! SetConsoleMode(hStdin, fdwMode) )
         		return luaL_error(L, "SetConsoleMode failed");
 
-	if (! ReadConsoleInput(
-                	hStdin,      // input buffer handle
-                	irInBuf,     // buffer to read into
-                	128,         // size of read buffer
-                	&cNumRead) ) // number of records read
-            		return luaL_error(L, "ReadConsoleInput failed");
+	if (! GetNumberOfConsoleInputEvents(hStdin, &cNum) )
+		return luaL_error(L, "GetNumberOfConsoleInputEvents failed");
 
 	char buffer[128];
 	memset(buffer, 0, sizeof(buffer));
 	int count = 0;
 
-        	for (i = 0; i < cNumRead; i++)
-        	{
-            		switch(irInBuf[i].EventType)
-            		{
-                	case KEY_EVENT: // keyboard input
-			if (!irInBuf[i].Event.KeyEvent.bKeyDown) {
-				WORD vCode = irInBuf[i].Event.KeyEvent.wVirtualKeyCode;
-				if (vCode == VK_ESCAPE) {
-					buffer[count++] = 'e';
-				} else if (vCode == VK_SPACE) {
-					buffer[count++] = 'p';
-				} else {
-					char c = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
-					if (c != ' ' && c != 'e') {
-						buffer[count++] = c;
+	if (cNum > 0) {
+		if (! ReadConsoleInput(
+                		hStdin,      // input buffer handle
+                		irInBuf,     // buffer to read into
+                		128,         // size of read buffer
+                		&cNumRead) ) // number of records read
+	            		return luaL_error(L, "ReadConsoleInput failed");
+
+	        	for (i = 0; i < cNumRead; i++)
+        		{
+            			switch(irInBuf[i].EventType)
+            			{
+                		case KEY_EVENT: // keyboard input
+				if (!irInBuf[i].Event.KeyEvent.bKeyDown) {
+					WORD vCode = irInBuf[i].Event.KeyEvent.wVirtualKeyCode;
+					if (vCode == VK_ESCAPE) {
+						buffer[count++] = 'e';
+					} else if (vCode == VK_SPACE) {
+						buffer[count++] = 'p';
+					} else {
+						char c = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
+						if (c != ' ' && c != 'e') {
+							buffer[count++] = c;
+						}
 					}
 				}
-			}
-                    		break;
+                    			break;
 
-                	case WINDOW_BUFFER_SIZE_EVENT: // disregard buf. resizing
-                    		break;
+	                	case WINDOW_BUFFER_SIZE_EVENT: // disregard buf. resizing
+                	    		break;
 
-                	case FOCUS_EVENT:  // disregard focus events
-			break;
+	                	case FOCUS_EVENT:  // disregard focus events
+				break;
 
-                	case MENU_EVENT:   // disregard menu events
-                    		break;
+	                	case MENU_EVENT:   // disregard menu events
+                	    		break;
 
-                	default:
-                    		return luaL_error(L, "Unknown event type");
-                    		break;
-            		}
-        	}
+	                	default:
+                	    		return luaL_error(L, "Unknown event type");
+                    			break;
+            			}
+        		}
+	}
+
+	SetConsoleMode(hStdin, fdwSaveOldMode);
 
 	lua_pushlstring(L, buffer, count);
 	return 1;

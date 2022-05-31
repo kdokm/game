@@ -75,7 +75,7 @@ function REQUEST:acqBagItem()
 end
 
 function REQUEST:move()
-	skynet.call("scene", "lua", "init", client_id, self.x, self.y)
+	skynet.call("scene", "lua", "move", client_id, self.x, self.y)
 end
 
 function REQUEST:buyItem(id)
@@ -149,9 +149,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	local r = skynet.call("scene", "lua", "init", client_id)
-	r.updates = skynet.call("aoi", "lua", "get", client_id)
-	send_package(send_request("push", r))
+	skynet.call("scene", "lua", "init", client_id, client_fd)
 end
 
 function CMD.disconnect()

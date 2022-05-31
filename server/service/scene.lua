@@ -49,26 +49,25 @@ local function storeMP(id)
 	skynet.call("redis", "lua", "set", "M", id, tostring(players[id].mp))
 end
 
-function CMD.init(id)
+function CMD.init(id, fd)
 	players[id] = {}
-	initPos(id)
 	initHP(id)
 	initMP(id)
-	skynet.call("aoi", "lua", "update", id, players[id].x, players[id].y, players[id].hp)
-	return players[id]
+	initPos(id)
+	skynet.call("aoi", "lua", "init", id, players[id], fd)
 end
 
 function CMD.quit(id)
-	storePos(id)
 	storeHP(id)
 	storeMP(id)
+	storePos(id)
 	skynet.call("aoi", "lua", "quit", id)
 end
 
 function CMD.move(id, x, y)
 	players[id].x = players[id].x + x
 	players[id].y = players[id].y + y
-	skynet.call("aoi", "lua", "update", id, players[id].x, players[id].y, players[id].hp)
+	skynet.call("aoi", "lua", "move", id, players[id].x, players[id].y)
 end
 
 skynet.start(function()
