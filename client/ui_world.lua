@@ -24,35 +24,34 @@ end
 local function print_update_bar(x, y, hp, mp)
 	if x ~= currX or y ~= currY then
 		lcontrol.jump(125, 1)
-		print("position: "..tostring(x)..", "..tostring(y))
+		io.write("position: "..tostring(x)..", "..tostring(y))
 		currX = x
 		currY = y
 	end
 	if hp ~= currHp then
 		lcontrol.jump(5, 1)
-		print("HP: "..tostring(hp))
+		io.write("HP: "..tostring(hp))
 		currHp = hp
 	end
 	if mp ~= currMp then
 		lcontrol.jump(25, 1)
-		print("MP: "..tostring(mp))
+		io.write("MP: "..tostring(mp))
 		currMp = mp
 	end
 end
 
 function world.print_update(args)
+	--print(args.x)
 	print_update_bar(args.x, args.y, args.hp, args.mp)
 	local updates = args.updates
 	if updates == nil then
 		return
 	end
-	for update in updates do
-		lcontrol.jump(80+(update.x-x)*5, 16+update.y-y)
-		--if update.id in monster then
-		--	print(update.id.."("..update.hp..")")
-		--else
-			print(update.id)
-		--end
+	for k, v in pairs(updates) do
+		local x = 80+(v.x-args.x)*10
+		local y = 16+(v.y-args.y)*2
+		lcontrol.jump(x, y)
+		io.write(v.id.."("..tostring(v.hp)..")")
 	end
 end
 

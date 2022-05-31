@@ -160,6 +160,8 @@ function CMD.start(conf)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
 	local r = attr.init(client_id)
+	skynet.call("aoi", "lua", "update", client_id, r.x, r.y, r.hp)
+	r.updates = skynet.call("aoi", "lua", "get", client_id)
 	send_package(send_request("push", r))
 end
 
