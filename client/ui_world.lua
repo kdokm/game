@@ -60,13 +60,13 @@ function world.control(cmd)
 		if c == "e" then
 			return true
 		elseif c == "w" then
-			message.request("move", { x = -1, y = 0 })
-		elseif c == "s" then
 			message.request("move", { x = 0, y = -1 })
-		elseif c == "a" then
-			message.request("move", { x = 1, y = 0 })
-		elseif c == "d" then
+		elseif c == "s" then
 			message.request("move", { x = 0, y = 1 })
+		elseif c == "a" then
+			message.request("move", { x = -1, y = 0 })
+		elseif c == "d" then
+			message.request("move", { x = 1, y = 0 })
 		elseif c == "p" then
 			--message.requset("attack")
 		end
