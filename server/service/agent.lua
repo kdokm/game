@@ -78,6 +78,10 @@ function REQUEST:move()
 	skynet.call("scene", "lua", "move", client_id, self.x, self.y)
 end
 
+function REQUEST:attack()
+	skynet.call("scene", "lua", "attack", client_id)
+end
+
 function REQUEST:buyItem(id)
 	--skynet.call("trade", "lua", "buy", id)
 end
@@ -90,6 +94,7 @@ function REQUEST:handshake()
 end
 
 function REQUEST:quit()
+	skynet.error("agent quit")
 	skynet.call("scene", "lua", "quit", client_id)
 	skynet.call(WATCHDOG, "lua", "close", client_fd)
 end
@@ -150,7 +155,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	skynet.call("scene", "lua", "init", client_id, client_fd)
+	skynet.call("scene", "lua", "initPlayer", client_id, client_fd)
 end
 
 function CMD.disconnect()

@@ -81,7 +81,7 @@ function world.control(cmd)
 		elseif c == "d" then
 			message.request("move", { x = 1, y = 0 })
 		elseif c == "p" then
-			--message.requset("attack")
+			message.request("attack")
 		end
 	end
 	return false

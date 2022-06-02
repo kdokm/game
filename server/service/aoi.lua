@@ -7,16 +7,17 @@ local sprotoloader = require "sprotoloader"
 local CMD = {}
 observer = {}
 observant = {}
+updates = {}
 attrs = {}
 fds = {}
 
-local function inRange(x1, y1, x2, y2)
+local function inRange(x1, y1, x2, y2, r)
 	local d = x1 - x2
-	if d > 2 or d < -2 then
+	if d > r or d < -r then
 		return false
 	end
 	d = y1 - y2
-	if d > 2 or d < -2 then
+	if d > r or d < -r then
 		return false
 	end
 	return true
@@ -29,20 +30,28 @@ end
 
 local function push(id)
 	local r = {}
-	for k, v in pairs(observant[id]) do
+	for k, v in pairs(updates[id]) do
 		table.insert(r, attrs[k])
 	end
 	attrs[id].updates = r
-	send_package(fds[id], send_request("push", attrs[id]))
+	if attrs[id].type == "player" then
+		send_package(fds[id], send_request("push", attrs[id]))
+	else
+		--skynet.call("monster", "lua", "react")
+	end
 	attrs[id].updates = nil
 end
 
 function CMD.init(id, attr, fd)
+	skynet.error("after")
 	attrs[id] = attr
 	attrs[id].id = id
-	fds[id] = fd
+	if attrs[id].type == "player" then
+		fds[id] = fd
+	end
 	observer[id] = {}
 	observant[id] = {}
+	updates[id] = {}
 	for k, v in pairs(observer) do
 		observant[id][k] = k
 	end
@@ -51,23 +60,43 @@ function CMD.init(id, attr, fd)
 	end
 	CMD.move(id, attr.x, attr.y)
 	push(id)
-	observant[id] = {}
 end
 
 function CMD.move(id, x, y)
-	for k, v in pairs(observer) do
-		v[id] = id
-	end
-	for k, v in pairs(observant) do
-		v[id] = id
+	for k, v in pairs(attrs) do
+		updates[k][id] = id
+		updates[id][k] = k
 	end
 	attrs[id].x = x
 	attrs[id].y = y
 end
 
+function CMD.attack(id, type)
+	local r = {}
+	for k, v in pairs(observant[id]) do
+		skynet.error("in1")
+		if k ~= id and attrs[k].type == type 
+		and inRange(attrs[id].x, attrs[id].y, attrs[k].x, attrs[k].y, 1) then
+			skynet.error("in2")
+			r[k] = k
+		end
+	end
+	return r
+end
+
+function CMD.updateHP(info)
+	for k, v in pairs(info) do
+		attrs[k].hp = v
+		for k2, v2 in pairs(observer) do
+			updates[k2][k] = k
+		end
+	end
+end
+
 function CMD.quit(id)
 	observer[id] = nil
 	observant[id] = nil
+	updates[id] = nil
 	for k, v in pairs(observer) do
 		v[id] = nil
 	end
@@ -79,9 +108,11 @@ function CMD.quit(id)
 end
 
 local function pushAll()
-	for k, v in pairs(observant) do
-		push(k)
-		observant[k] = {}
+	for k, v in pairs(updates) do
+		--if next(v) ~= nil then
+			push(k)
+			updates[k] = {}
+		--end
 	end
 end
 

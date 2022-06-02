@@ -55,7 +55,9 @@ move 7 {
 	}
 }
 
-quit 8 {}
+attack 8 {}
+
+quit 9 {}
 
 ]]
 

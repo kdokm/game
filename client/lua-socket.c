@@ -47,7 +47,7 @@ lconnect(lua_State *L) {
 	{
 		freeaddrinfo(result);
 		closesocket(sock);
-		return luaL_error(L, "Connect %s %d failed", addr, port);
+		return luaL_error(L, "Connect %s %s failed", addr, port);
 	}
 
 	freeaddrinfo(result);

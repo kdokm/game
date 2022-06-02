@@ -23,7 +23,7 @@ IP = IP or "127.0.0.1"
 
 message.register(string.format("../common/sproto/proto"))
 
-message.peer(IP, 8888)
+message.peer(IP, "8888")
 message.connect()
 
 local event = {}
@@ -81,6 +81,8 @@ status = "w"
 while true do
 	local flag = funcs[status].control(lcontrol.get_pressed())
 	if flag then
+		message.request("quit")
+		socket.close()
 		break
 	end
 	message.update()
