@@ -66,7 +66,7 @@ lget_pressed(lua_State *L) {
 						buffer[count++] = 'p';
 					} else {
 						char c = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;
-						if (c != ' ' && c != 'e') {
+						if (c != 'e' && c != 'p') {
 							buffer[count++] = c;
 						}
 					}
