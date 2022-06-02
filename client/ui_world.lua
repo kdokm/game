@@ -10,10 +10,9 @@ local currX = -1
 local currY = -1
 local currHp = -1
 local currMp = -1
+local players = {}
 
-function world.print_init()
-	print("\n\n")
-	common.print_line()
+local function print_options()
 	lcontrol.jump(0, 34)
 	common.print_line()
 	print(" W: up, S: down, A: left, D: right\n\n")
@@ -21,38 +20,52 @@ function world.print_init()
 	print("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
 end
 
-local function print_update_bar(x, y, hp, mp)
-	if x ~= currX or y ~= currY then
-		lcontrol.jump(125, 1)
-		io.write("position: "..tostring(x)..", "..tostring(y))
-		currX = x
-		currY = y
+local function print_upper_bar(x, y, hp, mp)
+	lcontrol.jump(5, 1)
+	io.write("HP: "..tostring(hp))
+	currHp = hp
+
+	lcontrol.jump(25, 1)
+	io.write("MP: "..tostring(mp))
+	currMp = mp
+
+	lcontrol.jump(125, 1)
+	print("position: "..tostring(x)..", "..tostring(y))
+	currX = x
+	currY = y
+	common.print_line()
+end
+
+local function in_range(x, y)
+	if x < 0 or x > 160 then
+		return false
 	end
-	if hp ~= currHp then
-		lcontrol.jump(5, 1)
-		io.write("HP: "..tostring(hp))
-		currHp = hp
+	if y < 3 or y > 34 then
+		return false
 	end
-	if mp ~= currMp then
-		lcontrol.jump(25, 1)
-		io.write("MP: "..tostring(mp))
-		currMp = mp
-	end
+	return true
 end
 
 function world.print_update(args)
 	--print(args.x)
-	print_update_bar(args.x, args.y, args.hp, args.mp)
+	os.execute("cls")
+	print_upper_bar(args.x, args.y, args.hp, args.mp)
 	local updates = args.updates
 	if updates == nil then
 		return
 	end
 	for k, v in pairs(updates) do
+		players[v.id] = v
+	end
+	for k, v in pairs(players) do
 		local x = 80+(v.x-args.x)*10
 		local y = 16+(v.y-args.y)*2
-		lcontrol.jump(x, y)
-		io.write(v.id.."("..tostring(v.hp)..")")
+		if in_range(x, y) then
+			lcontrol.jump(x, y)
+			io.write(v.id.."("..tostring(v.hp)..")")
+		end
 	end
+	print_options()
 end
 
 function world.control(cmd)
