@@ -90,6 +90,7 @@ function REQUEST:handshake()
 end
 
 function REQUEST:quit()
+	skynet.call("scene", "lua", "quit", client_id)
 	skynet.call(WATCHDOG, "lua", "close", client_fd)
 end
 

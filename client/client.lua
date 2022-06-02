@@ -59,11 +59,6 @@ local function login()
 	return status
 end
 
-local function transition()
-	os.execute("cls")
-	funcs[status].print_init()
-end
-
 os.execute("cls")
 os.execute("title Game")
 os.execute("mode con cols=160 lines=40")
@@ -74,8 +69,9 @@ while status ~= "ok" do
 	print(status.."! Please try again!")
 	login()
 end
+os.execute("cls")
+lcontrol.set_buffer()
 status = "w"
-transition()
 
 --message.request("getBag")
 --message.request("acqBagItem", { id = "item1", amount = 3 })

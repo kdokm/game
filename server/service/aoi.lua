@@ -28,29 +28,38 @@ local function send_package(fd, pack)
 end
 
 local function push(id)
-	attrs[id].updates = observant[id]
-	skynet.error(attrs[id].x)
+	local r = {}
+	for k, v in pairs(observant[id]) do
+		table.insert(r, attrs[k])
+	end
+	attrs[id].updates = r
 	send_package(fds[id], send_request("push", attrs[id]))
 	attrs[id].updates = nil
 end
 
 function CMD.init(id, attr, fd)
 	attrs[id] = attr
+	attrs[id].id = id
 	fds[id] = fd
+	observer[id] = {}
+	observant[id] = {}
+	for k, v in pairs(observer) do
+		observant[id][k] = k
+	end
+	for k, v in pairs(observant) do
+		observer[id][k] = k
+	end
 	CMD.move(id, attr.x, attr.y)
 	push(id)
 	observant[id] = {}
 end
 
 function CMD.move(id, x, y)
-	local r = {}
-	observer[id] = r
-	observant[id] = r
 	for k, v in pairs(observer) do
-		table.insert(v, { id=id, x=x, y=y, hp=attrs[id].hp })
+		v[id] = id
 	end
 	for k, v in pairs(observant) do
-		table.insert(v, { id=id, x=x, y=y, hp=attrs[id].hp })
+		v[id] = id
 	end
 	attrs[id].x = x
 	attrs[id].y = y
@@ -60,19 +69,20 @@ function CMD.quit(id)
 	observer[id] = nil
 	observant[id] = nil
 	for k, v in pairs(observer) do
-		--todo
+		v[id] = nil
 	end
 	for k, v in pairs(observant) do
-		--todo
+		v[id] = nil
 	end
 	attrs[id] = nil
+	fds[id] = nil
 end
 
 local function pushAll()
 	for k, v in pairs(observant) do
 		push(k)
+		observant[k] = {}
 	end
-	observant = {}
 end
 
 skynet.start(function()
@@ -88,7 +98,7 @@ skynet.start(function()
 	skynet.fork(function()
 		while true do
 			pushAll()
-			skynet.sleep(100)
+			skynet.sleep(50)
 		end
 	end)
 end)

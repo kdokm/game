@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <conio.h>
 
+HANDLE hStdout, hOutBuf;
+
 static int
 ljump(lua_State *L) {
 	const int x = luaL_checkinteger(L, 1);
@@ -100,6 +102,67 @@ lsleep(lua_State *L) {
 	return 0;
 }
 
+static int
+lset_buffer(lua_State *L) {
+	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	hOutBuf = CreateConsoleScreenBuffer(
+        		GENERIC_READ | GENERIC_WRITE, 
+        		FILE_SHARE_READ | FILE_SHARE_WRITE, 
+        		NULL, 
+        		CONSOLE_TEXTMODE_BUFFER, 
+        		NULL
+    	);
+	SetConsoleActiveScreenBuffer(hOutBuf);
+
+	CONSOLE_CURSOR_INFO cci;
+    	cci.bVisible=0;
+    	cci.dwSize=1;
+    	SetConsoleCursorInfo(hOutBuf, &cci);
+	return 0;
+}
+
+void cls(HANDLE hConsole)
+{
+    	CONSOLE_SCREEN_BUFFER_INFO csbi;
+    	SMALL_RECT scrollRect;
+	COORD scrollTarget;
+    	CHAR_INFO fill;
+
+	// Get the number of character cells in the current buffer.
+    	if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
+    	{
+        		return;
+    	}
+
+	// Scroll the rectangle of the entire buffer.
+    	scrollRect.Left = 0;
+    	scrollRect.Top = 0;
+    	scrollRect.Right = csbi.dwSize.X;
+    	scrollRect.Bottom = csbi.dwSize.Y;
+
+    	// Scroll it upwards off the top of the buffer with a magnitude of the entire height.
+    	scrollTarget.X = 0;
+    	scrollTarget.Y = (SHORT)(0 - csbi.dwSize.Y);
+
+    	// Fill with empty spaces with the buffer's default text attribute.
+    	fill.Char.UnicodeChar = TEXT(' ');
+    	fill.Attributes = csbi.wAttributes;
+
+	// Do the scroll
+    	ScrollConsoleScreenBuffer(hConsole, &scrollRect, NULL, scrollTarget, &fill);
+}
+
+static int
+lwrite_buffer(lua_State *L) {
+	char data[6400];
+	COORD coord = { 0, 0 };
+	DWORD bytes = 0;
+	ReadConsoleOutputCharacterA(hStdout, data, 6400, coord, &bytes);
+            	WriteConsoleOutputCharacterA(hOutBuf, data, 6400, coord, &bytes);
+	cls(hStdout);
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_lcontrol(lua_State *L) {
 	luaL_checkversion(L);
@@ -107,6 +170,8 @@ luaopen_lcontrol(lua_State *L) {
 		{ "jump", ljump },
 		{ "get_pressed", lget_pressed },
 		{ "sleep", lsleep },
+		{ "set_buffer", lset_buffer },
+		{ "write_buffer", lwrite_buffer },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
