@@ -43,7 +43,6 @@ local function push(id)
 end
 
 function CMD.init(id, attr, fd)
-	skynet.error("after")
 	attrs[id] = attr
 	attrs[id].id = id
 	if attrs[id].type == "player" then
@@ -58,26 +57,25 @@ function CMD.init(id, attr, fd)
 	for k, v in pairs(observant) do
 		observer[id][k] = k
 	end
-	CMD.move(id, attr.x, attr.y)
+	CMD.move(id, attr.x, attr.y, attr.dir)
 	push(id)
 end
 
-function CMD.move(id, x, y)
+function CMD.move(id, x, y, dir)
 	for k, v in pairs(attrs) do
 		updates[k][id] = id
 		updates[id][k] = k
 	end
 	attrs[id].x = x
 	attrs[id].y = y
+	attrs[id].dir = dir
 end
 
-function CMD.attack(id, type)
+function CMD.attack(id, type, x, y)
 	local r = {}
 	for k, v in pairs(observant[id]) do
-		skynet.error("in1")
 		if k ~= id and attrs[k].type == type 
-		and inRange(attrs[id].x, attrs[id].y, attrs[k].x, attrs[k].y, 1) then
-			skynet.error("in2")
+		and inRange(x, y, attrs[k].x, attrs[k].y, 1) then
 			r[k] = k
 		end
 	end

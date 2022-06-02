@@ -16,6 +16,7 @@ local function initPos(id)
 		entities[id].x = tonumber(string.sub(r, 1, posDigit))
                                 entities[id].y = tonumber(string.sub(r, posDigit+1))
 	end
+	entities[id].dir = utils.getInitDir()
 end
 
 local function storePos(id)
@@ -62,6 +63,7 @@ function CMD.initMonster(id, info)
 	entities[id].hp = 300
 	entities[id].x = 200 + math.ceil(math.random() * 100)
 	entities[id].y = 40 + math.ceil(math.random() * 20)
+	entities[id].dir = utils.getInitDir()
 	skynet.error(entities[id].x, entities[id].y)
 	skynet.call("aoi", "lua", "init", id, entities[id], nil)
 end
@@ -74,14 +76,17 @@ function CMD.quit(id)
 	skynet.call("aoi", "lua", "quit", id)
 end
 
-function CMD.move(id, x, y)
+function CMD.move(id, dir)
+	local x, y = utils.decodeDir(dir)
 	entities[id].x = entities[id].x + x
 	entities[id].y = entities[id].y + y
-	skynet.call("aoi", "lua", "move", id, entities[id].x, entities[id].y)
+	entities[id].dir = dir
+	skynet.call("aoi", "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
 end
 
 function CMD.attack(id)
-	local r = skynet.call("aoi", "lua", "attack", id, "monster")
+	local x, y = utils.decodeDir(entities[id].dir)
+	local r = skynet.call("aoi", "lua", "attack", id, "monster", entities[id].x+x, entities[id].y+y)
 	for k, v in pairs(r) do
 		local amount = 100
 		if entities[k].hp > amount then
