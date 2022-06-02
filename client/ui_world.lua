@@ -17,7 +17,7 @@ local function print_options()
 	common.print_line()
 	print(" W: up, S: down, A: left, D: right\n\n")
 	common.print_line()
-	print("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
+	io.write("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
 end
 
 local function print_upper_bar(x, y, hp, mp)
@@ -48,7 +48,6 @@ end
 
 function world.print_update(args)
 	--print(args.x)
-	os.execute("cls")
 	print_upper_bar(args.x, args.y, args.hp, args.mp)
 	local updates = args.updates
 	if updates == nil then
@@ -66,6 +65,7 @@ function world.print_update(args)
 		end
 	end
 	print_options()
+	lcontrol.write_buffer()
 end
 
 function world.control(cmd)

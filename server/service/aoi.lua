@@ -69,10 +69,10 @@ function CMD.quit(id)
 	observer[id] = nil
 	observant[id] = nil
 	for k, v in pairs(observer) do
-		--todo
+		v[id] = nil
 	end
 	for k, v in pairs(observant) do
-		--todo
+		v[id] = nil
 	end
 	attrs[id] = nil
 	fds[id] = nil

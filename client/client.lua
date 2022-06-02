@@ -69,6 +69,8 @@ while status ~= "ok" do
 	print(status.."! Please try again!")
 	login()
 end
+os.execute("cls")
+lcontrol.set_buffer()
 status = "w"
 
 --message.request("getBag")
