@@ -37,7 +37,7 @@ local function push(id)
 	if attrs[id].type == "player" then
 		send_package(fds[id], send_request("push", attrs[id]))
 	else
-		--skynet.call("monster", "lua", "react")
+		skynet.call("monster", "lua", "react", attrs[id])
 	end
 	attrs[id].updates = nil
 end
@@ -74,10 +74,8 @@ end
 function CMD.attack(id, type)
 	local r = {}
 	for k, v in pairs(observant[id]) do
-		skynet.error("in1")
 		if k ~= id and attrs[k].type == type 
 		and inRange(attrs[id].x, attrs[id].y, attrs[k].x, attrs[k].y, 1) then
-			skynet.error("in2")
 			r[k] = k
 		end
 	end
@@ -109,10 +107,10 @@ end
 
 local function pushAll()
 	for k, v in pairs(updates) do
-		--if next(v) ~= nil then
+		if next(v) ~= nil then
 			push(k)
 			updates[k] = {}
-		--end
+		end
 	end
 end
 
