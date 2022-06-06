@@ -1,7 +1,7 @@
 local lcontrol = require "lcontrol"
 local message = require "message"
 local common = require "ui_common"
---local monster = require "monster"
+local utils = require "utils"
 
 local world = {}
 local pre = common.pre
@@ -61,7 +61,9 @@ function world.print_update(args)
 		local y = 16+(v.y-args.y)*2
 		if in_range(x, y) then
 			lcontrol.jump(x, y)
-			io.write(v.id.."("..tostring(v.hp)..")")
+			io.write(v.id.."("..utils.dirStr(v.dir)..")")
+			lcontrol.jump(x, y+1)
+			io.write("["..tostring(v.hp).."]")
 		end
 	end
 	print_options()
@@ -73,13 +75,13 @@ function world.control(cmd)
 		if c == "e" then
 			return true
 		elseif c == "w" then
-			message.request("move", { x = 0, y = -1 })
+			message.request("move", { dir = utils.encodeDir(0, -1) })
 		elseif c == "s" then
-			message.request("move", { x = 0, y = 1 })
+			message.request("move", { dir = utils.encodeDir(0, 1) })
 		elseif c == "a" then
-			message.request("move", { x = -1, y = 0 })
+			message.request("move", { dir = utils.encodeDir(-1, 0) })
 		elseif c == "d" then
-			message.request("move", { x = 1, y = 0 })
+			message.request("move", { dir = utils.encodeDir(1, 0) })
 		elseif c == "p" then
 			message.request("attack")
 		end

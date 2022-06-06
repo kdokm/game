@@ -50,8 +50,7 @@ acqBagItem 6 {
 
 move 7 {
 	request {
-		x 0 : integer
-		y 1 : integer
+		dir 0 : integer
 	}
 }
 
@@ -72,6 +71,7 @@ proto.s2c = sprotoparser.parse [[
 	x 1 : integer
 	y 2 : integer
 	hp 3 : integer
+	dir 4 : integer
 }
 
 heartbeat 1 {}

@@ -75,7 +75,7 @@ function REQUEST:acqBagItem()
 end
 
 function REQUEST:move()
-	skynet.call("scene", "lua", "move", client_id, self.x, self.y)
+	skynet.call("scene", "lua", "move", client_id, self.dir)
 end
 
 function REQUEST:attack()
