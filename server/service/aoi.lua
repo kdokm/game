@@ -28,6 +28,7 @@ local function push(id)
 	res.y = attrs[id].y
 	res.hp = attrs[id].hp
 	res.mp = attrs[id].mp
+	res.ranges = attrs[id].ranges
 	res.updates = r
 
 	if attrs[id].type == "player" then
@@ -40,6 +41,7 @@ end
 function CMD.init(id, attr, fd)
 	attrs[id] = attr
 	attrs[id].id = id
+	attrs[id].ranges = {}
 	if attrs[id].type == "player" then
 		fds[id] = fd
 	end
@@ -71,10 +73,9 @@ end
 function CMD.attack(id, type, x, y)
 	local r = {}
 	for k, v in pairs(observant[id]) do
-		skynet.error(k)
+		table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
 		if k ~= id and attrs[k].type == type 
 		and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
-			skynet.error("in2")
 			r[k] = k
 		end
 	end
@@ -106,9 +107,10 @@ end
 
 local function pushAll()
 	for k, v in pairs(updates) do
-		if next(v) ~= nil then
+		if next(v) ~= nil or next(attrs[k].ranges) ~= nil then
 			push(k)
 			updates[k] = {}
+			attrs[k].ranges = {}
 		end
 	end
 end
