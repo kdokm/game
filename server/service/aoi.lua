@@ -3,6 +3,7 @@ require "skynet.manager"
 local socket = require "skynet.socket"
 local sproto = require "sproto"
 local sprotoloader = require "sprotoloader"
+local utils = require "utils"
 
 local CMD = {}
 observer = {}
@@ -10,18 +11,6 @@ observant = {}
 updates = {}
 attrs = {}
 fds = {}
-
-local function inRange(x1, y1, x2, y2, r)
-	local d = x1 - x2
-	if d > r or d < -r then
-		return false
-	end
-	d = y1 - y2
-	if d > r or d < -r then
-		return false
-	end
-	return true
-end
 
 local function send_package(fd, pack)
 	local package = string.pack(">s2", pack)
@@ -33,13 +22,19 @@ local function push(id)
 	for k, v in pairs(updates[id]) do
 		table.insert(r, attrs[k])
 	end
-	attrs[id].updates = r
+
+	local res = {}
+	res.x = attrs[id].x
+	res.y = attrs[id].y
+	res.hp = attrs[id].hp
+	res.mp = attrs[id].mp
+	res.updates = r
+
 	if attrs[id].type == "player" then
-		send_package(fds[id], send_request("push", attrs[id]))
+		send_package(fds[id], send_request("push", res))
 	else
-		--skynet.call("monster", "lua", "react")
+		skynet.call("monster", "lua", "react", res)
 	end
-	attrs[id].updates = nil
 end
 
 function CMD.init(id, attr, fd)
@@ -53,9 +48,11 @@ function CMD.init(id, attr, fd)
 	updates[id] = {}
 	for k, v in pairs(observer) do
 		observant[id][k] = k
+		observant[k][id] = id
 	end
 	for k, v in pairs(observant) do
 		observer[id][k] = k
+		observer[k][id] = id
 	end
 	CMD.move(id, attr.x, attr.y, attr.dir)
 	push(id)
@@ -74,8 +71,10 @@ end
 function CMD.attack(id, type, x, y)
 	local r = {}
 	for k, v in pairs(observant[id]) do
+		skynet.error(k)
 		if k ~= id and attrs[k].type == type 
-		and inRange(x, y, attrs[k].x, attrs[k].y, 1) then
+		and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
+			skynet.error("in2")
 			r[k] = k
 		end
 	end
@@ -107,10 +106,10 @@ end
 
 local function pushAll()
 	for k, v in pairs(updates) do
-		--if next(v) ~= nil then
+		if next(v) ~= nil then
 			push(k)
 			updates[k] = {}
-		--end
+		end
 	end
 end
 
@@ -127,7 +126,7 @@ skynet.start(function()
 	skynet.fork(function()
 		while true do
 			pushAll()
-			skynet.sleep(50)
+			skynet.sleep(33)
 		end
 	end)
 end)

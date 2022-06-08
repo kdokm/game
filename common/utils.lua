@@ -41,4 +41,16 @@ function utils.getInitDir()
 	return 2
 end
 
+function utils.inRangeSquare(x1, y1, x2, y2, r)
+	local d = x1 - x2
+	if d > r or d < -r then
+		return false
+	end
+	d = y1 - y2
+	if d > r or d < -r then
+		return false
+	end
+	return true
+end
+
 return utils

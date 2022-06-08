@@ -1,0 +1,3 @@
+local skill = {}
+
+return skill
