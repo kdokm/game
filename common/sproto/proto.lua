@@ -74,6 +74,16 @@ proto.s2c = sprotoparser.parse [[
 	dir 4 : integer
 }
 
+.point {
+	x 0 : integer
+	y 1 : integer
+}
+
+.range {
+	upperLeft 0 : point
+	lowerRight 1 : point
+}
+
 heartbeat 1 {}
 
 push 2 {
@@ -83,6 +93,7 @@ push 2 {
 		hp 2 : integer
 		mp 3 : integer
 		updates 4 : *update
+		ranges 5 : *range
 	}
 }
 

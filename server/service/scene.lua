@@ -93,7 +93,7 @@ function CMD.attack(id)
 		r = skynet.call("aoi", "lua", "attack", id, "player", entities[id].x+x, entities[id].y+y)
 	end
 	for k, v in pairs(r) do
-		local amount = 100
+		local amount = 10
 		if entities[k].hp > amount then
 			entities[k].hp = entities[k].hp - amount
 		else

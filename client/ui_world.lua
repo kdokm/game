@@ -8,6 +8,7 @@ local pre = common.pre
 
 local currX = -1
 local currY = -1
+local currDir = utils.getInitDir()
 local currHp = -1
 local currMp = -1
 local players = {}
@@ -37,7 +38,7 @@ local function print_upper_bar(x, y, hp, mp)
 end
 
 local function in_range(x, y)
-	if x < 0 or x > 160 then
+	if x < 0 or x > 159 then
 		return false
 	end
 	if y < 3 or y > 34 then
@@ -46,19 +47,48 @@ local function in_range(x, y)
 	return true
 end
 
-function world.print_update(args)
-	--print(args.x)
+local function get_related_x(x, center)
+	return 80+(x-center)*10
+end
+
+local function get_related_y(y, center)
+	return 16+(y-center)*2
+end
+
+local function print_ranges(args, symbol)
+	local ranges = args.ranges
+	local x = args.x
+	local y = args.y
+	for k, v in pairs(ranges) do
+		local upperLeft = v.upperLeft
+		local lowerRight = v.lowerRight
+		upperLeft.x = math.max(0, get_related_x(upperLeft.x, x))
+		upperLeft.y = math.max(3, get_related_y(upperLeft.y, y))
+		lowerRight.x = math.min(159, get_related_x(lowerRight.x, x))
+		lowerRight.y = math.min(34, get_related_y(lowerRight.y, y))
+
+		for i = 0, lowerRight.y-upperLeft.y do
+			lcontrol.jump(upperLeft.x, upperLeft.y+i)
+			for j = 0, lowerRight.x-upperLeft.x do
+				io.write(symbol)
+			end
+		end
+	end
+	lcontrol.write_buffer()
+	lcontrol.sleep(100)
+	args.ranges = {}
+	world.print_update(args)
+end
+
+function world.print_update(args, symbol)
 	print_upper_bar(args.x, args.y, args.hp, args.mp)
 	local updates = args.updates
-	if updates == nil then
-		return
-	end
 	for k, v in pairs(updates) do
 		players[v.id] = v
 	end
 	for k, v in pairs(players) do
-		local x = 80+(v.x-args.x)*10
-		local y = 16+(v.y-args.y)*2
+		local x = get_related_x(v.x, args.x)
+		local y = get_related_y(v.y, args.y)
 		if in_range(x, y) then
 			lcontrol.jump(x, y)
 			io.write(v.id.."("..utils.dirStr(v.dir)..")")
@@ -67,7 +97,14 @@ function world.print_update(args)
 		end
 	end
 	print_options()
-	lcontrol.write_buffer()
+	if #args.ranges > 0 then
+		if symbol == nil then
+			symbol = "*"
+		end
+		print_ranges(args, symbol)
+	else
+		lcontrol.write_buffer()
+	end
 end
 
 function world.control(cmd)
@@ -75,15 +112,25 @@ function world.control(cmd)
 		if c == "e" then
 			return true
 		elseif c == "w" then
-			message.request("move", { dir = utils.encodeDir(0, -1) })
+			currDir = utils.encodeDir(0, -1)
+			message.request("move", { dir = currDir })
 		elseif c == "s" then
-			message.request("move", { dir = utils.encodeDir(0, 1) })
+			currDir = utils.encodeDir(0, 1)
+			message.request("move", { dir = currDir })
 		elseif c == "a" then
-			message.request("move", { dir = utils.encodeDir(-1, 0) })
+			currDir = utils.encodeDir(-1, 0)
+			message.request("move", { dir = currDir })
 		elseif c == "d" then
-			message.request("move", { dir = utils.encodeDir(1, 0) })
+			currDir = utils.encodeDir(1, 0)
+			message.request("move", { dir = currDir })
 		elseif c == "p" then
 			message.request("attack")
+			local attr = {x=currX, y=currY, hp=currHp, mp=currMp}
+			attr.updates = {}
+			attr.ranges = {}
+			local x, y = utils.decodeDir(currDir)
+			table.insert(attr.ranges, utils.getRangeSquare(currX+x, currY+y, 1))
+			world.print_update(attr, "+")			
 		end
 	end
 	return false

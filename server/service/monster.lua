@@ -25,14 +25,12 @@ local function action()
 	if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
 		skynet.call("scene", "lua", "attack", "wolf")
 	else
-		local nextDir
 		if math.abs(pos.x-target.x) > math.abs(pos.y-target.y) then
-			nextDir = utils.encodeDir(moveDir(pos.x, target.x), 0)
+			dir = utils.encodeDir(moveDir(pos.x, target.x), 0)
 		else
-			nextDir = utils.encodeDir(0, moveDir(pos.y, target.y))
+			dir = utils.encodeDir(0, moveDir(pos.y, target.y))
 		end
-		skynet.call("scene", "lua", "move", "wolf", nextDir)
-		dir = nextDir
+		skynet.call("scene", "lua", "move", "wolf", dir)
 	end
 end
 
