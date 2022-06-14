@@ -6,6 +6,7 @@ local CMD = {}
 local minDist = 3
 local pos = {}
 local dir = utils.getInitDir()
+local entities = {}
 local target = {}
 
 local function dist(x1, y1, x2, y2)
@@ -21,6 +22,7 @@ local function moveDir(current, target)
 end
 
 local function action()
+	skynet.error(target.id)
 	local x, y = utils.decodeDir(dir)
 	if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
 		skynet.call("scene", "lua", "attack", "wolf")
@@ -35,22 +37,35 @@ local function action()
 end
 
 function CMD.react(attr)
-	target.dist = nil
+	local flag = true
 	for k, v in pairs(attr.updates) do
-		if v.id ~= "wolf" then
-			local d = dist(attr.x, attr.y, v.x, v.y)
-			if d <= minDist then
-				if target.dist == nil or d < target.dist then
-					target.x = v.x
-					target.y = v.y
-					target.dist = d
-					target.id = v.id
-				end
+		entities[v.id] = v
+		if v.id == target.id then
+			flag = false
+		end
+	end
+
+	local set
+	if pos.x == attr.x and pos.y == attr.y and flag then
+		set = attr.updates
+	else
+		set = entities
+		target.dist = nil
+		pos.x = attr.x
+		pos.y = attr.y
+	end
+
+	for k, v in pairs(set) do
+		local d = dist(attr.x, attr.y, v.x, v.y)
+		if v.id ~= "wolf" and d <= minDist then
+			if target.dist == nil or d < target.dist then
+				target.x = v.x
+				target.y = v.y
+				target.dist = d
+				target.id = v.id
 			end
 		end
 	end
-	pos.x =attr.x
-	pos.y = attr.y
 end
 
 skynet.start(function()
