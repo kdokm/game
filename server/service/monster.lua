@@ -22,6 +22,7 @@ local function moveDir(current, target)
 end
 
 local function action()
+	skynet.error(target.id)
 	local x, y = utils.decodeDir(dir)
 	if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
 		skynet.call("scene", "lua", "attack", "wolf")
@@ -38,9 +39,7 @@ end
 function CMD.react(attr)
 	local flag = true
 	for k, v in pairs(attr.updates) do
-		if v.id ~= "wolf" then
-			entities[v.id] = v
-		end
+		entities[v.id] = v
 		if v.id == target.id then
 			flag = false
 		end
@@ -58,7 +57,7 @@ function CMD.react(attr)
 
 	for k, v in pairs(set) do
 		local d = dist(attr.x, attr.y, v.x, v.y)
-		if d <= minDist then
+		if v.id ~= "wolf" and d <= minDist then
 			if target.dist == nil or d < target.dist then
 				target.x = v.x
 				target.y = v.y

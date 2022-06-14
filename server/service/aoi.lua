@@ -123,10 +123,12 @@ function CMD.attack(id, type, x, y)
 			local grid = grids[index+i+j]
 			if grid ~= nil then
 				for k, v in pairs(grid) do
-					table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
-					if k ~= id and attrs[k].type == type 
-					and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
-						r[k] = k
+					if k ~= id then
+						table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
+						if attrs[k].type == type 
+						and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
+							r[k] = k
+						end
 					end
 				end
 			end
