@@ -11,7 +11,7 @@ local function initPos(id)
 	local r = skynet.call("redis", "lua", "get", "P", id)
 	if r == nil then
 		entities[id].x = 250
-		entities[id].y = 50
+		entities[id].y = 250
 	else
 		entities[id].x = tonumber(string.sub(r, 1, posDigit))
                                 entities[id].y = tonumber(string.sub(r, posDigit+1))
@@ -62,7 +62,7 @@ function CMD.initMonster(id, info)
 	entities[id] = { type="monster" }
 	entities[id].hp = 300
 	entities[id].x = 225 + math.ceil(math.random() * 50)
-	entities[id].y = 45 + math.ceil(math.random() * 10)
+	entities[id].y = 225 + math.ceil(math.random() * 50)
 	entities[id].dir = utils.getInitDir()
 	skynet.error(entities[id].x, entities[id].y)
 	skynet.call("aoi", "lua", "init", id, entities[id], nil)
