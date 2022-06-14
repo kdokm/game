@@ -6,11 +6,11 @@ local sprotoloader = require "sprotoloader"
 local utils = require "utils"
 
 local CMD = {}
-observer = {}
-observant = {}
+grids = {}
 updates = {}
 attrs = {}
 fds = {}
+local rowSize = 500
 
 local function send_package(fd, pack)
 	local package = string.pack(">s2", pack)
@@ -38,6 +38,53 @@ local function push(id)
 	end
 end
 
+local function getGridIndex(x, y)
+	return x // 5 + y // 5 * rowSize;
+end
+
+local function updateOneGrid(id, grid, init)
+	if grid ~= nil then
+		for k, v in pairs(grid) do
+			updates[k][id] = id
+			if init ~= nil then
+				updates[id][k] = k
+			end
+		end
+	end
+end
+
+local function changeGrid(id, old, new)
+	if old == nil then
+		if grids[new] == nil then
+			grids[new] = {}
+		end
+		grids[new][id] = id
+		for i = -1, 1 do
+			for j = -rowSize, rowSize, rowSize do
+				updateOneGrid(id, grids[new+i+j], true)
+			end
+		end
+	else
+		grids[old][id] = nil
+		if new ~= nil then
+			if grids[new] == nil then
+				grids[new] = {}
+			end
+			grids[new][id] = id
+			local diff = new - old
+			if diff % rowSize == 0 then
+				for i = -1, 1 do
+					updateOneGrid(id, grids[new+diff+i], true)
+				end
+			else
+				for i = -rowSize, rowSize, rowSize do
+					updateOneGrid(id, grids[new+diff+i], true)
+				end
+			end
+		end
+	end
+end
+
 function CMD.init(id, attr, fd)
 	attrs[id] = attr
 	attrs[id].id = id
@@ -45,38 +92,42 @@ function CMD.init(id, attr, fd)
 	if attrs[id].type == "player" then
 		fds[id] = fd
 	end
-	observer[id] = {}
-	observant[id] = {}
 	updates[id] = {}
-	for k, v in pairs(observer) do
-		observant[id][k] = k
-		observant[k][id] = id
-	end
-	for k, v in pairs(observant) do
-		observer[id][k] = k
-		observer[k][id] = id
-	end
-	CMD.move(id, attr.x, attr.y, attr.dir)
+	changeGrid(id, nil, getGridIndex(attr.x, attr.y))
 	push(id)
 end
 
 function CMD.move(id, x, y, dir)
-	for k, v in pairs(attrs) do
-		updates[k][id] = id
-		updates[id][k] = k
-	end
+	local old = getGridIndex(attrs[id].x, attrs[id].y)
+	local new = getGridIndex(x, y)
 	attrs[id].x = x
 	attrs[id].y = y
 	attrs[id].dir = dir
+	for i = -1, 1 do
+		for j = -rowSize, rowSize, rowSize do
+			updateOneGrid(id, grids[new+i+j])
+		end
+	end
+	if old ~= new then
+		changeGrid(id, old, new)
+	end
 end
 
 function CMD.attack(id, type, x, y)
 	local r = {}
-	for k, v in pairs(observant[id]) do
-		table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
-		if k ~= id and attrs[k].type == type 
-		and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
-			r[k] = k
+	local index = getGridIndex(attrs[id].x, attrs[id].y)
+	for i = -1, 1 do
+		for j = -rowSize, rowSize, rowSize do
+			local grid = grids[index+i+j]
+			if grid ~= nil then
+				for k, v in pairs(grid) do
+					table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
+					if k ~= id and attrs[k].type == type 
+					and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
+						r[k] = k
+					end
+				end
+			end
 		end
 	end
 	return r
@@ -85,22 +136,18 @@ end
 function CMD.updateHP(info)
 	for k, v in pairs(info) do
 		attrs[k].hp = v
-		for k2, v2 in pairs(observer) do
-			updates[k2][k] = k
+		local index = getGridIndex(attrs[k].x, attrs[k].y)
+		for i = -1, 1 do
+			for j = -rowSize, rowSize, rowSize do
+				updateOneGrid(k, grids[index+i+j])
+			end
 		end
 	end
 end
 
 function CMD.quit(id)
-	observer[id] = nil
-	observant[id] = nil
+	changeGrid(id, getGridIndex(attrs[id].x, attrs[id].y), nil)
 	updates[id] = nil
-	for k, v in pairs(observer) do
-		v[id] = nil
-	end
-	for k, v in pairs(observant) do
-		v[id] = nil
-	end
 	attrs[id] = nil
 	fds[id] = nil
 end

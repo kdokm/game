@@ -44,6 +44,7 @@ function CMD.react(attr)
 					target.x = v.x
 					target.y = v.y
 					target.dist = d
+					target.id = v.id
 				end
 			end
 		end
