@@ -11,7 +11,7 @@ local currY = -1
 local currDir = utils.getInitDir()
 local currHp = -1
 local currMp = -1
-local players = {}
+local entities = {}
 
 local function print_options()
 	lcontrol.jump(0, 34)
@@ -84,9 +84,9 @@ function world.print_update(args, symbol)
 	print_upper_bar(args.x, args.y, args.hp, args.mp)
 	local updates = args.updates
 	for k, v in pairs(updates) do
-		players[v.id] = v
+		entities[v.id] = v
 	end
-	for k, v in pairs(players) do
+	for k, v in pairs(entities) do
 		local x = get_related_x(v.x, args.x)
 		local y = get_related_y(v.y, args.y)
 		if in_range(x, y) then

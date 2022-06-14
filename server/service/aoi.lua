@@ -36,6 +36,8 @@ local function push(id)
 	else
 		skynet.call("monster", "lua", "react", res)
 	end
+	updates[id] = {}
+	attrs[id].ranges = {}
 end
 
 local function getGridIndex(x, y)
@@ -156,8 +158,6 @@ local function pushAll()
 	for k, v in pairs(updates) do
 		if next(v) ~= nil or next(attrs[k].ranges) ~= nil then
 			push(k)
-			updates[k] = {}
-			attrs[k].ranges = {}
 		end
 	end
 end
