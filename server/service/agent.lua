@@ -17,6 +17,7 @@ local REQUEST = {}
 
 local client_fd
 local client_id
+local zone
 
 function REQUEST:getAttr()
 	return { result = panel.getAttr() }
@@ -75,11 +76,11 @@ function REQUEST:acqBagItem()
 end
 
 function REQUEST:move()
-	skynet.call("scene", "lua", "move", client_id, self.dir)
+	skynet.call(zone, "lua", "move", client_id, self.dir)
 end
 
 function REQUEST:attack()
-	skynet.call("scene", "lua", "attack", client_id)
+	skynet.call(zone, "lua", "attack", client_id)
 end
 
 function REQUEST:buyItem(id)
@@ -155,7 +156,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	skynet.call("scene", "lua", "initPlayer", client_id, client_fd)
+	zone = skynet.call("world", "lua", "initPlayer", client_id, client_fd)
 end
 
 function CMD.disconnect()
@@ -164,7 +165,6 @@ function CMD.disconnect()
 end
 
 skynet.start(function()
-	--redis = skynet.newservice("redis")
 	skynet.dispatch("lua", function(_,_, command, ...)
 		skynet.trace()
 		local f = CMD[command]

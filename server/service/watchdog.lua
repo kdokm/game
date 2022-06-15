@@ -70,7 +70,7 @@ skynet.start(function()
 		end
 	end)
 
-	skynet.newservice("scene")
+	skynet.newservice("world")
 	gate = skynet.newservice("gate")
 	login = skynet.newservice("login")
 	skynet.call(login, "lua", "start", { gate = gate, watchdog = skynet.self() })

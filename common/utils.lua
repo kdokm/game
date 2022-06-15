@@ -1,4 +1,4 @@
-local utils = {}
+local utils = {x_max = 500, y_max = 500}
 
 function utils.genStr(num, len)
 	s = tostring(num)

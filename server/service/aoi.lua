@@ -10,6 +10,7 @@ grids = {}
 updates = {}
 attrs = {}
 fds = {}
+services = {}
 local rowSize = 500
 
 local function send_package(fd, pack)
@@ -34,7 +35,7 @@ local function push(id)
 	if attrs[id].type == "player" then
 		send_package(fds[id], send_request("push", res))
 	else
-		skynet.call("monster", "lua", "react", res)
+		skynet.call(services[id], "lua", "react", res)
 	end
 	updates[id] = {}
 	attrs[id].ranges = {}
@@ -87,12 +88,14 @@ local function changeGrid(id, old, new)
 	end
 end
 
-function CMD.init(id, attr, fd)
+function CMD.init(id, attr, info)
 	attrs[id] = attr
 	attrs[id].id = id
 	attrs[id].ranges = {}
 	if attrs[id].type == "player" then
-		fds[id] = fd
+		fds[id] = info
+	else
+		services[id] = info
 	end
 	updates[id] = {}
 	changeGrid(id, nil, getGridIndex(attr.x, attr.y))
@@ -170,7 +173,6 @@ skynet.start(function()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
 	end)
-	skynet.register "aoi"
 
 	host = sprotoloader.load(1):host "package"
 	send_request = host:attach(sprotoloader.load(2))

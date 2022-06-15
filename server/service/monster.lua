@@ -8,6 +8,7 @@ local pos = {}
 local dir = utils.getInitDir()
 local entities = {}
 local target = {}
+local zone
 
 local function dist(x1, y1, x2, y2)
 	return math.abs(x1-x2) + math.abs(y1-y2)
@@ -25,15 +26,28 @@ local function action()
 	skynet.error(target.id)
 	local x, y = utils.decodeDir(dir)
 	if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
-		skynet.call("scene", "lua", "attack", "wolf")
+		skynet.call(zone, "lua", "attack", "wolf")
 	else
 		if math.abs(pos.x-target.x) > math.abs(pos.y-target.y) then
 			dir = utils.encodeDir(moveDir(pos.x, target.x), 0)
 		else
 			dir = utils.encodeDir(0, moveDir(pos.y, target.y))
 		end
-		skynet.call("scene", "lua", "move", "wolf", dir)
+		skynet.call(zone, "lua", "move", "wolf", dir)
 	end
+end
+
+function CMD.start(z)
+	zone = z
+	skynet.call(zone, "lua", "initMonster", "wolf", {})
+	skynet.fork(function()
+		while true do
+			if target.dist ~= nil then
+				action()
+			end
+			skynet.sleep(100)
+		end
+	end)
 end
 
 function CMD.react(attr)
@@ -73,15 +87,5 @@ skynet.start(function()
 		skynet.trace()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
-	end)
-	skynet.register "monster"
-	skynet.call("scene", "lua", "initMonster", "wolf", {})
-	skynet.fork(function()
-		while true do
-			if target.dist ~= nil then
-				action()
-			end
-			skynet.sleep(100)
-		end
 	end)
 end)

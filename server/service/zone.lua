@@ -2,25 +2,18 @@ local skynet = require "skynet"
 require "skynet.manager"
 local equation = require "equation"
 local utils = require "utils"
+local backend_utils = require "backend_utils"
 
 local CMD = {}
 local entities = {}
-local posDigit = 3
-
-local function initPos(id)
-	local r = skynet.call("redis", "lua", "get", "P", id)
-	if r == nil then
-		entities[id].x = 250
-		entities[id].y = 250
-	else
-		entities[id].x = tonumber(string.sub(r, 1, posDigit))
-                                entities[id].y = tonumber(string.sub(r, posDigit+1))
-	end
-	entities[id].dir = utils.getInitDir()
-end
+local zones = {}
+local zone_id
+local aoi
+local monster
 
 local function storePos(id)
-	local r = utils.genStr(entities[id].x, posDigit)..utils.genStr(entities[id].y, posDigit)
+	local r = utils.genStr(entities[id].x, backend_utils.pos_digit)
+	            ..utils.genStr(entities[id].y, backend_utils.pos_digit)
 	skynet.call("redis", "lua", "set", "P", id, r)
 end
 
@@ -50,22 +43,30 @@ local function storeMP(id)
 	skynet.call("redis", "lua", "set", "M", id, tostring(entities[id].mp))
 end
 
-function CMD.initPlayer(id, fd)
+function CMD.start(id, zs)
+	zone_id = id
+	skynet.error(zone_id)
+	zones = zs
+	skynet.call(monster, "lua", "start", skynet.self())
+end
+
+function CMD.initPlayer(id, fd, x, y)
 	entities[id] = { type="player" }
+	entities[id].x = x
+                entities[id].y = y
+	entities[id].dir = utils.getInitDir()
 	initHP(id)
 	initMP(id)
-	initPos(id)
-	skynet.call("aoi", "lua", "init", id, entities[id], fd)
+	skynet.call(aoi, "lua", "init", id, entities[id], fd)
 end
 
 function CMD.initMonster(id, info)
 	entities[id] = { type="monster" }
 	entities[id].hp = 300
-	entities[id].x = 225 + math.ceil(math.random() * 50)
-	entities[id].y = 225 + math.ceil(math.random() * 50)
+	entities[id].x, entities[id].y = backend_utils.initPos(zone_id, "random")
 	entities[id].dir = utils.getInitDir()
 	skynet.error(entities[id].x, entities[id].y)
-	skynet.call("aoi", "lua", "init", id, entities[id], nil)
+	skynet.call(aoi, "lua", "init", id, entities[id], monster)
 end
 
 function CMD.quit(id)
@@ -73,7 +74,7 @@ function CMD.quit(id)
 	storeMP(id)
 	storePos(id)
 	entities[id] = nil
-	skynet.call("aoi", "lua", "quit", id)
+	skynet.call(aoi, "lua", "quit", id)
 end
 
 function CMD.move(id, dir)
@@ -81,16 +82,16 @@ function CMD.move(id, dir)
 	entities[id].x = entities[id].x + x
 	entities[id].y = entities[id].y + y
 	entities[id].dir = dir
-	skynet.call("aoi", "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
+	skynet.call(aoi, "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
 end
 
 function CMD.attack(id)
 	local x, y = utils.decodeDir(entities[id].dir)
 	local r
 	if entities[id].type == "player" then
-		r = skynet.call("aoi", "lua", "attack", id, "monster", entities[id].x+x, entities[id].y+y)
+		r = skynet.call(aoi, "lua", "attack", id, "monster", entities[id].x+x, entities[id].y+y)
 	else
-		r = skynet.call("aoi", "lua", "attack", id, "player", entities[id].x+x, entities[id].y+y)
+		r = skynet.call(aoi, "lua", "attack", id, "player", entities[id].x+x, entities[id].y+y)
 	end
 	for k, v in pairs(r) do
 		local amount = 10
@@ -102,7 +103,7 @@ function CMD.attack(id)
 		r[k] = entities[k].hp
 		skynet.error(r[k])
 	end
-	skynet.call("aoi", "lua", "updateHP", r)
+	skynet.call(aoi, "lua", "updateHP", r)
 end
 
 skynet.start(function()
@@ -111,7 +112,6 @@ skynet.start(function()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
 	end)
-	skynet.register "scene"
-	skynet.newservice("aoi")
-	skynet.newservice("monster")
+	aoi = skynet.newservice("aoi")
+	monster = skynet.newservice("monster")
 end)
