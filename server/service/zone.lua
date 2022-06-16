@@ -2,7 +2,6 @@ local skynet = require "skynet"
 require "skynet.manager"
 local equation = require "equation"
 local utils = require "utils"
-local backend_utils = require "backend_utils"
 
 local CMD = {}
 local entities = {}
@@ -11,8 +10,8 @@ local zone_id
 local aoi
 
 local function storePos(id)
-	local r = utils.genStr(entities[id].x, backend_utils.pos_digit)
-	            ..utils.genStr(entities[id].y, backend_utils.pos_digit)
+	local r = utils.genStr(entities[id].x, utils.pos_digit)
+	            ..utils.genStr(entities[id].y, utils.pos_digit)
 	skynet.call("redis", "lua", "set", "P", id, r)
 end
 
@@ -45,8 +44,12 @@ end
 function CMD.start(id)
 	zone_id = id
 	skynet.error(zone_id)
-	for i = 1, 1 do
-		skynet.call(monster_services[i], "lua", "start", skynet.self())
+	for k, v in pairs(utils.getMonsters(id)) do
+		for i = 1, v do
+			local monster_id = k..tostring(i)
+			monster_services[monster_id] = skynet.newservice(k)
+			skynet.call(monster_services[monster_id], "lua", "start", skynet.self(), monster_id)
+		end
 	end
 end
 
@@ -64,10 +67,10 @@ end
 function CMD.initMonster(id, info)
 	entities[id] = { type="monster" }
 	entities[id].hp = 300
-	entities[id].x, entities[id].y = backend_utils.initPos(zone_id, "random")
+	entities[id].x, entities[id].y = utils.initPos(zone_id, "random")
 	entities[id].dir = utils.getInitDir()
 	skynet.error(entities[id].x, entities[id].y)
-	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[1])
+	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[id])
 end
 
 function CMD.quit(id, next)
@@ -87,7 +90,7 @@ function CMD.move(id, dir)
 	entities[id].x = entities[id].x + x
 	entities[id].y = entities[id].y + y
 	entities[id].dir = dir
-	local next = backend_utils.getZoneID(entities[id].x, entities[id].y)
+	local next = utils.getZoneID(entities[id].x, entities[id].y)
 	if next == zone_id then
 		skynet.call(aoi, "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
 	else
@@ -124,7 +127,4 @@ skynet.start(function()
 		skynet.ret(skynet.pack(f(...)))
 	end)
 	aoi = skynet.newservice("aoi")
-	for i = 1, 1 do
-		monster_services[i] = skynet.newservice("monster")
-	end
 end)

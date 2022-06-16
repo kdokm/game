@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 require "skynet.manager"
 local utils = require "utils"
-local backend_utils = require "backend_utils"
 
 local CMD = {}
 local zones = {}
@@ -12,16 +11,16 @@ local function dispatch(id)
 	local x, y
 	local r = skynet.call("redis", "lua", "get", "P", id)
 	if r == nil then
-		for k, v in pairs(backend_utils.init_zones) do
+		for k, v in pairs(utils.init_zones) do
 			if zone_id == nil or amounts[v] < amounts[zone_id] then
 				zone_id = v
 			end
 		end
-		x, y = backend_utils.initPos(zone_id, "center")
+		x, y = utils.initPos(zone_id, "center")
 	else
-		x = tonumber(string.sub(r, 1, backend_utils.pos_digit))
-                                y = tonumber(string.sub(r, backend_utils.pos_digit+1))
-		zone_id = backend_utils.getZoneID(x, y)
+		x = tonumber(string.sub(r, 1, utils.pos_digit))
+                                y = tonumber(string.sub(r, utils.pos_digit+1))
+		zone_id = utils.getZoneID(x, y)
 	end
 	return zone_id, x, y
 end
@@ -49,7 +48,7 @@ skynet.start(function()
 		skynet.ret(skynet.pack(f(...)))
 	end)
 	skynet.register "world"
-	for i = 0, backend_utils.num_zones_x * backend_utils.num_zones_y - 1 do
+	for i = 0, utils.num_zones_x * utils.num_zones_y - 1 do
 		zones[i] = skynet.newservice("zone")
 		amounts[i] = 0
 		skynet.call(zones[i], "lua", "start", i)

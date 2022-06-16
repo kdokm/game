@@ -91,7 +91,7 @@ function world.print_update(args, symbol)
 		local y = get_related_y(v.y, args.y)
 		if in_range(x, y) then
 			lcontrol.jump(x, y)
-			io.write(v.id.."("..utils.dirStr(v.dir)..")")
+			io.write(utils.getDisplayID(v.id).."("..utils.dirStr(v.dir)..")")
 			lcontrol.jump(x, y+1)
 			io.write("["..tostring(v.hp).."]")
 		end
