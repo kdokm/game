@@ -19,8 +19,8 @@ local function dispatch(id)
 		end
 		x, y = backend_utils.initPos(zone_id, "center")
 	else
-		x = tonumber(string.sub(r, 1, pos_digit))
-                                y = tonumber(string.sub(r, pos_digit+1))
+		x = tonumber(string.sub(r, 1, backend_utils.pos_digit))
+                                y = tonumber(string.sub(r, backend_utils.pos_digit+1))
 		zone_id = backend_utils.getZoneID(x, y)
 	end
 	return zone_id, x, y
@@ -29,8 +29,17 @@ end
 function CMD.initPlayer(id, fd)
 	local zone_id, x, y = dispatch(id)
 	amounts[zone_id] = amounts[zone_id] + 1
-	skynet.call(zones[zone_id], "lua", "initPlayer", id, fd, x, y)
+	skynet.call(zones[zone_id], "lua", "initPlayer", id, fd, {x=x, y=y})
 	return zones[zone_id]
+end
+
+function CMD.updateZone(id, fd, attr, old, new)
+	amounts[old] = amounts[old] - 1
+	if new ~= nil then
+		amounts[new] = amounts[new] + 1
+		skynet.call(zones[new], "lua", "initPlayer", id, fd, attr)
+		return zones[new]
+	end
 end
 
 skynet.start(function()
@@ -43,8 +52,6 @@ skynet.start(function()
 	for i = 0, backend_utils.num_zones_x * backend_utils.num_zones_y - 1 do
 		zones[i] = skynet.newservice("zone")
 		amounts[i] = 0
-	end
-	for k, v in pairs(zones) do
-		skynet.call(v, "lua", "start", k, zones)
+		skynet.call(zones[i], "lua", "start", i)
 	end
 end)

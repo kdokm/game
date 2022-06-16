@@ -76,7 +76,10 @@ function REQUEST:acqBagItem()
 end
 
 function REQUEST:move()
-	skynet.call(zone, "lua", "move", client_id, self.dir)
+	local next = skynet.call(zone, "lua", "move", client_id, self.dir)
+	if next ~= nil then
+		zone = next
+	end
 end
 
 function REQUEST:attack()

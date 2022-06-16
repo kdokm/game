@@ -6,10 +6,9 @@ local backend_utils = require "backend_utils"
 
 local CMD = {}
 local entities = {}
-local zones = {}
+local monster_services = {}
 local zone_id
 local aoi
-local monster
 
 local function storePos(id)
 	local r = utils.genStr(entities[id].x, backend_utils.pos_digit)
@@ -43,20 +42,22 @@ local function storeMP(id)
 	skynet.call("redis", "lua", "set", "M", id, tostring(entities[id].mp))
 end
 
-function CMD.start(id, zs)
+function CMD.start(id)
 	zone_id = id
 	skynet.error(zone_id)
-	zones = zs
-	skynet.call(monster, "lua", "start", skynet.self())
+	for i = 1, 1 do
+		skynet.call(monster_services[i], "lua", "start", skynet.self())
+	end
 end
 
-function CMD.initPlayer(id, fd, x, y)
-	entities[id] = { type="player" }
-	entities[id].x = x
-                entities[id].y = y
-	entities[id].dir = utils.getInitDir()
-	initHP(id)
-	initMP(id)
+function CMD.initPlayer(id, fd, attr)
+	entities[id] = attr
+	entities[id].type = "player"
+	if entities[id].dir == nil then
+		entities[id].dir = utils.getInitDir()
+		initHP(id)
+		initMP(id)
+	end
 	skynet.call(aoi, "lua", "init", id, entities[id], fd)
 end
 
@@ -66,15 +67,19 @@ function CMD.initMonster(id, info)
 	entities[id].x, entities[id].y = backend_utils.initPos(zone_id, "random")
 	entities[id].dir = utils.getInitDir()
 	skynet.error(entities[id].x, entities[id].y)
-	skynet.call(aoi, "lua", "init", id, entities[id], monster)
+	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[1])
 end
 
-function CMD.quit(id)
-	storeHP(id)
-	storeMP(id)
-	storePos(id)
+function CMD.quit(id, next)
+	if next == nil then
+		storeHP(id)
+		storeMP(id)
+		storePos(id)
+	end
+	local fd = skynet.call(aoi, "lua", "quit", id)
+	local next_zone = skynet.call("world", "lua", "updateZone", id, fd, entities[id], zone_id, next)
 	entities[id] = nil
-	skynet.call(aoi, "lua", "quit", id)
+	return next_zone
 end
 
 function CMD.move(id, dir)
@@ -82,7 +87,13 @@ function CMD.move(id, dir)
 	entities[id].x = entities[id].x + x
 	entities[id].y = entities[id].y + y
 	entities[id].dir = dir
-	skynet.call(aoi, "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
+	local next = backend_utils.getZoneID(entities[id].x, entities[id].y)
+	if next == zone_id then
+		skynet.call(aoi, "lua", "move", id, entities[id].x, entities[id].y, entities[id].dir)
+	else
+		local next_zone = CMD.quit(id, next)
+		return next_zone
+	end
 end
 
 function CMD.attack(id)
@@ -113,5 +124,7 @@ skynet.start(function()
 		skynet.ret(skynet.pack(f(...)))
 	end)
 	aoi = skynet.newservice("aoi")
-	monster = skynet.newservice("monster")
+	for i = 1, 1 do
+		monster_services[i] = skynet.newservice("monster")
+	end
 end)
