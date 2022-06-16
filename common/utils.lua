@@ -1,4 +1,10 @@
-local utils = {x_max = 500, y_max = 500}
+local utils = {x_max = 100, y_max = 100, pos_digit = 3, 
+	    num_zones_x = 2, num_zones_y = 2, init_zones = {1, 2}}
+
+local size_x = utils.x_max // utils.num_zones_x
+local size_y = utils.y_max // utils.num_zones_y
+local monsters = {wolf = "wolf"}
+local monsters_in_zones = {{}, {wolf=3}, {wolf=5}, {wolf=3}}
 
 function utils.genStr(num, len)
 	s = tostring(num)
@@ -58,6 +64,44 @@ function utils.getRangeSquare(x, y, r)
 	range.upperLeft = {x=x-r, y=y-r}
 	range.lowerRight = {x=x+r, y=y+r}
 	return range
+end
+
+local function decodeZone(zone_id)
+	return zone_id % utils.num_zones_x, zone_id // utils.num_zones_x
+end
+
+function utils.initPos(zone_id, mode)
+	local zone_x, zone_y = decodeZone(zone_id)
+	local x_min = zone_x * size_x
+	local y_min = zone_y * size_y
+
+	if mode == "center" then
+		return x_min + size_x // 2, y_min + size_y // 2
+	else
+		return x_min + math.ceil(math.random() * size_x),
+		           y_min + math.ceil(math.random() * size_y)
+	end
+end
+
+function utils.getZoneID(x, y)
+	return x // size_x + y // size_y * utils.num_zones_x
+end
+
+function utils.dist(x1, y1, x2, y2)
+	return math.abs(x1-x2) + math.abs(y1-y2)
+end
+
+function utils.getMonsters(zone_id)
+	return monsters_in_zones[zone_id+1] 
+end
+
+function utils.getDisplayID(id)
+	local res = string.match(id, "(%l+)%d+")
+	if res ~= nil and monsters[res] ~= nil then
+		return res
+	else
+		return id
+	end
 end
 
 return utils

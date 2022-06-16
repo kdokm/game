@@ -11,7 +11,7 @@ updates = {}
 attrs = {}
 fds = {}
 services = {}
-local rowSize = 500
+local rowSize = 100
 
 local function send_package(fd, pack)
 	local package = string.pack(">s2", pack)
