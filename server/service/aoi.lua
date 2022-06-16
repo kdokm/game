@@ -153,10 +153,12 @@ function CMD.updateHP(info)
 end
 
 function CMD.quit(id)
+	local fd = fds[id]
 	changeGrid(id, getGridIndex(attrs[id].x, attrs[id].y), nil)
 	updates[id] = nil
 	attrs[id] = nil
 	fds[id] = nil
+	return fd
 end
 
 local function pushAll()
