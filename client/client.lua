@@ -30,6 +30,9 @@ local event = {}
 
 message.bind({}, event)
 
+local id
+local time
+
 function event:__error(what, err, req, session)
 	print("error", what, err)
 end
@@ -37,7 +40,7 @@ end
 function event:push(args)
 	--print(args.x)
 	--print(args.hp)
-	funcs[status].print_update(args)
+	funcs[status].update(args)
 end
 
 local function login()
@@ -46,7 +49,7 @@ local function login()
 	local type = io.read()
 	io.write(seg)
 	io.write(pre..pre.."ID: ")
-	local id = io.read()
+	id = io.read()
 	print()
 	io.write(pre..pre.."Password: ")
 	local password = io.read()
@@ -78,13 +81,14 @@ status = "w"
 --message.request("acqBagItem", { id = "weapon1", amount = 2 })
 --message.request("getBag")
 
+time = lcontrol.get_time()
 while true do
-	local flag = funcs[status].control(lcontrol.get_pressed())
+	local flag = funcs[status].control(id, lcontrol.get_pressed())
 	if flag then
 		message.request("quit")
 		socket.close()
 		break
 	end
 	message.update()
-	lcontrol.sleep(100)
+	time = lcontrol.sleep(time, 100)
 end

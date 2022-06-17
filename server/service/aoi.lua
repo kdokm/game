@@ -11,6 +11,8 @@ updates = {}
 attrs = {}
 fds = {}
 services = {}
+local time = 0
+local real_time
 local rowSize = 100
 
 local function send_package(fd, pack)
@@ -31,6 +33,7 @@ local function push(id)
 	res.mp = attrs[id].mp
 	res.ranges = attrs[id].ranges
 	res.updates = r
+	res.time = time
 
 	if attrs[id].type == "player" then
 		send_package(fds[id], send_request("push", res))
@@ -99,7 +102,6 @@ function CMD.init(id, attr, info)
 	end
 	updates[id] = {}
 	changeGrid(id, nil, getGridIndex(attr.x, attr.y))
-	push(id)
 end
 
 function CMD.move(id, x, y, dir)
@@ -180,8 +182,13 @@ skynet.start(function()
 	send_request = host:attach(sprotoloader.load(2))
 	skynet.fork(function()
 		while true do
+			real_time = skynet.now()
 			pushAll()
-			skynet.sleep(33)
+			local diff = 10-(skynet.now()-real_time)
+			if diff > 0 then
+				skynet.sleep(diff)
+			end
+			time = time + 1
 		end
 	end)
 end)
