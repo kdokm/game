@@ -96,10 +96,23 @@ lget_pressed(lua_State *L) {
 }
 
 static int
+lget_time(lua_State *L) {
+	long long time = GetTickCount();
+	lua_pushinteger(L, time);
+	return 1;
+}
+
+static int
 lsleep(lua_State *L) {
-	int n = luaL_checknumber(L, 1);
-	Sleep(n);
-	return 0;
+	long long pre = luaL_checkinteger(L, 1);
+	int n = luaL_checkinteger(L, 2);
+	long long time = GetTickCount();
+	int diff = n-(int)(time-pre);
+	if (diff > 0) {
+		Sleep(diff);
+	}
+	lua_pushinteger(L, time+diff);
+	return 1;
 }
 
 static int
@@ -169,6 +182,7 @@ luaopen_lcontrol(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "jump", ljump },
 		{ "get_pressed", lget_pressed },
+		{ "get_time", lget_time },
 		{ "sleep", lsleep },
 		{ "set_buffer", lset_buffer },
 		{ "write_buffer", lwrite_buffer },
