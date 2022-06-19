@@ -99,6 +99,25 @@ function CMD.move(id, dir)
 	end
 end
 
+local function timeout(t, f, args)
+	local function fWithArgs()
+		f(table.unpack(args))
+	end
+	if args ~= nil then
+		skynet.timeout(t, fWithArgs)
+	else
+		skynet.timeout(t, f)
+	end
+end
+
+local function revive(id)
+	local hp = equation.getInitHP()
+	local r = {}
+	r[id] = hp
+	entities[id].hp = hp
+	skynet.call(aoi, "lua", "updateHP", r)
+end
+
 function CMD.attack(id)
 	local x, y = utils.decodeDir(entities[id].dir)
 	local r
@@ -108,14 +127,18 @@ function CMD.attack(id)
 		r = skynet.call(aoi, "lua", "attack", id, "player", entities[id].x+x, entities[id].y+y)
 	end
 	for k, v in pairs(r) do
-		local amount = 10
-		if entities[k].hp > amount then
-			entities[k].hp = entities[k].hp - amount
+		local amount = 50
+		if entities[k].hp == 0 then
+			r[k] = nil
 		else
-			entities[k].hp = 0
+			if entities[k].hp > amount then
+				entities[k].hp = entities[k].hp - amount
+			else
+				entities[k].hp = 0
+				timeout(500, revive, {k})
+			end
+			r[k] = entities[k].hp
 		end
-		r[k] = entities[k].hp
-		skynet.error(r[k])
 	end
 	skynet.call(aoi, "lua", "updateHP", r)
 end

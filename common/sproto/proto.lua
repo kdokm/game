@@ -92,9 +92,10 @@ push 2 {
 		y 1 : integer
 		hp 2 : integer
 		mp 3 : integer
-		updates 4 : *update
-		ranges 5 : *range
-		time 6 : integer
+		dir 4 : integer
+		updates 5 : *update
+		ranges 6 : *range
+		time 7 : integer
 	}
 }
 

@@ -69,7 +69,7 @@ function CMD.react(attr)
 
 	for k, v in pairs(set) do
 		local d = utils.dist(attr.x, attr.y, v.x, v.y)
-		if v.type == "player" and d <= minDist then
+		if v.type == "player" and v.hp ~= 0 and d <= minDist then
 			if target.dist == nil or d < target.dist then
 				target.x = v.x
 				target.y = v.y

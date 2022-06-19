@@ -4,6 +4,7 @@ local socket = require "skynet.socket"
 local sproto = require "sproto"
 local sprotoloader = require "sprotoloader"
 local utils = require "utils"
+local equation = require "equation"
 
 local CMD = {}
 grids = {}
@@ -23,7 +24,9 @@ end
 local function push(id)
 	local r = {}
 	for k, v in pairs(updates[id]) do
-		table.insert(r, attrs[k])
+		if k ~= id then
+			table.insert(r, attrs[k])
+		end
 	end
 
 	local res = {}
@@ -31,6 +34,7 @@ local function push(id)
 	res.y = attrs[id].y
 	res.hp = attrs[id].hp
 	res.mp = attrs[id].mp
+	res.dir = attrs[id].dir
 	res.ranges = attrs[id].ranges
 	res.updates = r
 	res.time = time
