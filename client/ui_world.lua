@@ -93,7 +93,7 @@ local function print_update(args)
 	print_options()
 	print_upper_bar(args.x, args.y, args.hp, args.mp, args.dir)
 	if args.hp == 0 then
-		lcontrol.jump(50, 15)
+		lcontrol.jump(60, 15)
 		io.write("Waiting for revive...")
 	else
 		local updates = args.updates

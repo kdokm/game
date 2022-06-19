@@ -76,7 +76,13 @@ local function changeGrid(id, old, new)
 		end
 	else
 		grids[old][id] = nil
-		if new ~= nil then
+		if new == nil then
+			for i = -1, 1 do
+				for j = -rowSize, rowSize, rowSize do
+					updateOneGrid(id, grids[old+i+j], true)
+				end
+			end
+		else
 			if grids[new] == nil then
 				grids[new] = {}
 			end

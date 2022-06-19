@@ -74,7 +74,7 @@ function CMD.initMonster(id, info)
 end
 
 function CMD.quit(id, next)
-	if next == nil then
+	if next == nil and entities[id].type == "player" then
 		storeHP(id)
 		storeMP(id)
 		storePos(id)
@@ -135,7 +135,12 @@ function CMD.attack(id)
 				entities[k].hp = entities[k].hp - amount
 			else
 				entities[k].hp = 0
-				timeout(500, revive, {k})
+				if entities[k].type == "player" then
+					timeout(500, revive, {k})
+				else
+					CMD.quit(k)
+					CMD.initMonster(k)
+				end
 			end
 			r[k] = entities[k].hp
 		end
