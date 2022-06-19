@@ -20,17 +20,19 @@ local function moveDir(current, target)
 end
 
 local function action()
-	skynet.error(target.id)
-	local x, y = utils.decodeDir(dir)
-	if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
-		skynet.call(zone, "lua", "attack", monster_id)
-	else
-		if math.abs(pos.x-target.x) > math.abs(pos.y-target.y) then
-			dir = utils.encodeDir(moveDir(pos.x, target.x), 0)
+	if target.id ~= nil then
+		skynet.error(target.id)
+		local x, y = utils.decodeDir(dir)
+		if utils.inRangeSquare(pos.x+x, pos.y+y, target.x, target.y, 1) then
+			skynet.call(zone, "lua", "attack", monster_id)
 		else
-			dir = utils.encodeDir(0, moveDir(pos.y, target.y))
+			if math.abs(pos.x-target.x) > math.abs(pos.y-target.y) then
+				dir = utils.encodeDir(moveDir(pos.x, target.x), 0)
+			else
+				dir = utils.encodeDir(0, moveDir(pos.y, target.y))
+			end
+			skynet.call(zone, "lua", "move", monster_id, dir)
 		end
-		skynet.call(zone, "lua", "move", monster_id, dir)
 	end
 end
 
@@ -62,7 +64,7 @@ function CMD.react(attr)
 		set = attr.updates
 	else
 		set = entities
-		target.dist = nil
+		target.id = nil
 		pos.x = attr.x
 		pos.y = attr.y
 	end
@@ -70,7 +72,7 @@ function CMD.react(attr)
 	for k, v in pairs(set) do
 		local d = utils.dist(attr.x, attr.y, v.x, v.y)
 		if v.type == "player" and v.hp ~= 0 and d <= minDist then
-			if target.dist == nil or d < target.dist then
+			if target.id == nil or d < target.dist then
 				target.x = v.x
 				target.y = v.y
 				target.dist = d
