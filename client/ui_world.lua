@@ -9,8 +9,8 @@ local pre = common.pre
 local currX = -1
 local currY = -1
 local currDir = utils.getInitDir()
-local currHp = -1
-local currMp = -1
+local currHP
+local currMP
 local entities = {}
 local updates = {}
 local curr_frame
@@ -24,19 +24,23 @@ local function print_options()
 	io.write("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
 end
 
-local function print_upper_bar(x, y, hp, mp)
+local function print_upper_bar(x, y, hp, mp, dir)
+	currHP = hp
+	currMP = mp
+	if currX == nil or utils.dist(x, y, currX, currY) > 5 then
+		currX = x
+		currY = y
+		currDir = dir
+	end
+
 	lcontrol.jump(5, 1)
-	io.write("HP: "..tostring(hp))
-	currHp = hp
+	io.write("HP: "..tostring(currHP))
 
 	lcontrol.jump(25, 1)
-	io.write("MP: "..tostring(mp))
-	currMp = mp
+	io.write("MP: "..tostring(currMP))
 
 	lcontrol.jump(125, 1)
-	print("position: "..tostring(x)..", "..tostring(y))
-	currX = x
-	currY = y
+	print("position: "..tostring(currX)..", "..tostring(currY))
 	common.print_line()
 end
 
@@ -87,38 +91,40 @@ end
 
 local function print_update(args)
 	print_options()
+	print_upper_bar(args.x, args.y, args.hp, args.mp, args.dir)
 	if args.hp == 0 then
 		lcontrol.jump(50, 15)
 		io.write("Waiting for revive...")
 	else
 		local updates = args.updates
 		for k, v in pairs(updates) do
-			if v.id ~= self_id or entities[self_id] == nil or utils.dist(v.x, v.y, currX, currY) > 5 then
-				entities[v.id] = v
-			else
-				entities[self_id].hp = args.hp
-				entities[self_id].mp = args.mp
-			end
+			entities[v.id] = v
 		end
-		print_upper_bar(entities[self_id].x, entities[self_id].y, entities[self_id].hp, entities[self_id].mp)
 		for k, v in pairs(entities) do
-			local x = get_related_x(v.x, entities[self_id].x)
-			local y = get_related_y(v.y, entities[self_id].y)
-			if in_range(x, y) then
-				lcontrol.jump(x, y)
-				io.write(utils.getDisplayID(k).."("..utils.dirStr(v.dir)..")")
-				lcontrol.jump(x, y+1)
-				io.write("["..tostring(v.hp).."]")
+			if v.hp ~= 0 then
+				local x = get_related_x(v.x, currX)
+				local y = get_related_y(v.y, currY)
+				if in_range(x, y) then
+					lcontrol.jump(x, y)
+					io.write(utils.getDisplayID(k).."("..utils.dirStr(v.dir)..")")
+					lcontrol.jump(x, y+1)
+					io.write("["..tostring(v.hp).."]")
+				end
 			end
 		end
+		lcontrol.jump(80, 16)
+		io.write(self_id.."("..utils.dirStr(currDir)..")")
+		lcontrol.jump(80, 17)
+		io.write("["..tostring(currHP).."]")
+
 		if #args.ranges > 0 then
 			if args.symbol == nil then
 				args.symbol = "*"
 			end
 			print_ranges(args)
 		end
-		lcontrol.write_buffer()
 	end
+	lcontrol.write_buffer()
 end
 
 function world.update(args, symbol)
@@ -142,7 +148,7 @@ function world.control(id, cmd)
 	end
 	if string.len(cmd) > 0 then
 		local c = string.sub(cmd, 1, 1)
-		local attr = {updates = {}, ranges = {}, hp=currHp, mp=currMp}
+		local attr = {updates = {}, ranges = {}, hp=currHP, mp=currMP}
 		if c == "e" then
 			return true
 		elseif c == "w" then
@@ -171,7 +177,6 @@ function world.control(id, cmd)
 		attr.y = currY
 		attr.dir = currDir
 		attr.time = curr_frame
-		entities[self_id] = attr
 		print_update(attr)
 	end
 	return false
