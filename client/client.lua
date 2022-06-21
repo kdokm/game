@@ -9,12 +9,14 @@ local socket = require "socket"
 local message = require "message"
 local common = require "ui_common"
 local world = require "ui_world"
+local character = require "ui_character"
 
 local seg = common.seg
 local pre = common.pre
 
 local funcs = {
-	w = world
+	w = world,
+	c = character
 }
 
 local IP = ...
@@ -41,6 +43,15 @@ function event:push(args)
 	--print(args.x)
 	--print(args.hp)
 	funcs[status].update(args)
+end
+
+function event:get_attr(req, resp)
+	if resp.attr ~= nil then
+		funcs["c"].update_attr(resp.attr)
+	else
+		print("error")
+		lcontrol.write_buffer()
+	end
 end
 
 local function login()
@@ -83,12 +94,13 @@ status = "w"
 
 time = lcontrol.get_time()
 while true do
-	local flag = funcs[status].control(id, lcontrol.get_pressed())
-	if flag then
+	local ret = funcs[status].control(id, lcontrol.get_pressed())
+	if ret == "e" then
 		message.request("quit")
 		socket.close()
 		break
 	end
+	status = ret
 	message.update()
 	time = lcontrol.sleep(time, 100)
 end

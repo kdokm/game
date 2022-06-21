@@ -5,12 +5,11 @@ local utils = require "utils"
 
 local world = {}
 local pre = common.pre
-
-local currX = -1
-local currY = -1
-local currDir = utils.getInitDir()
-local currHP
-local currMP
+local curr_x = -1
+local curr_y = -1
+local curr_dir = utils.get_init_dir()
+local curr_hp
+local curr_mp
 local entities = {}
 local updates = {}
 local curr_frame
@@ -25,22 +24,22 @@ local function print_options()
 end
 
 local function print_upper_bar(x, y, hp, mp, dir)
-	currHP = hp
-	currMP = mp
-	if currX == nil or utils.dist(x, y, currX, currY) > 5 then
-		currX = x
-		currY = y
-		currDir = dir
+	curr_hp = hp
+	curr_mp = mp
+	if curr_x == nil or utils.dist(x, y, curr_x, curr_y) > 5 then
+		curr_x = x
+		curr_y = y
+		curr_dir = dir
 	end
 
 	lcontrol.jump(5, 1)
-	io.write("HP: "..tostring(currHP))
+	io.write("HP: "..tostring(curr_hp))
 
 	lcontrol.jump(25, 1)
-	io.write("MP: "..tostring(currMP))
+	io.write("MP: "..tostring(curr_mp))
 
 	lcontrol.jump(125, 1)
-	print("position: "..tostring(currX)..", "..tostring(currY))
+	print("position: "..tostring(curr_x)..", "..tostring(curr_y))
 	common.print_line()
 end
 
@@ -67,16 +66,16 @@ local function print_ranges(args)
 	local x = args.x
 	local y = args.y
 	for k, v in pairs(ranges) do
-		local upperLeft = v.upperLeft
-		local lowerRight = v.lowerRight
-		upperLeft.x = math.max(0, get_related_x(upperLeft.x, x))
-		upperLeft.y = math.max(3, get_related_y(upperLeft.y, y))
-		lowerRight.x = math.min(159, get_related_x(lowerRight.x, x))
-		lowerRight.y = math.min(34, get_related_y(lowerRight.y, y))
+		local upper_left = v.upper_left
+		local lower_right = v.lower_right
+		upper_left.x = math.max(0, get_related_x(upper_left.x, x))
+		upper_left.y = math.max(3, get_related_y(upper_left.y, y))
+		lower_right.x = math.min(159, get_related_x(lower_right.x, x))
+		lower_right.y = math.min(34, get_related_y(lower_right.y, y))
 
-		for i = 0, lowerRight.y-upperLeft.y do
-			lcontrol.jump(upperLeft.x, upperLeft.y+i)
-			for j = 0, lowerRight.x-upperLeft.x do
+		for i = 0, lower_right.y-upper_left.y do
+			lcontrol.jump(upper_left.x, upper_left.y+i)
+			for j = 0, lower_right.x-upper_left.x do
 				io.write(args.symbol)
 			end
 		end
@@ -102,20 +101,20 @@ local function print_update(args)
 		end
 		for k, v in pairs(entities) do
 			if v.hp ~= 0 then
-				local x = get_related_x(v.x, currX)
-				local y = get_related_y(v.y, currY)
+				local x = get_related_x(v.x, curr_x)
+				local y = get_related_y(v.y, curr_y)
 				if in_range(x, y) then
 					lcontrol.jump(x, y)
-					io.write(utils.getDisplayID(k).."("..utils.dirStr(v.dir)..")")
+					io.write(utils.get_display_id(k).."("..utils.dir_str(v.dir)..")")
 					lcontrol.jump(x, y+1)
 					io.write("["..tostring(v.hp).."]")
 				end
 			end
 		end
 		lcontrol.jump(80, 16)
-		io.write(self_id.."("..utils.dirStr(currDir)..")")
+		io.write(self_id.."("..utils.dir_str(curr_dir)..")")
 		lcontrol.jump(80, 17)
-		io.write("["..tostring(currHP).."]")
+		io.write("["..tostring(curr_hp).."]")
 
 		if #args.ranges > 0 then
 			if args.symbol == nil then
@@ -146,40 +145,40 @@ function world.control(id, cmd)
 		end
 		curr_frame = curr_frame + 1
 	end
-	if string.len(cmd) > 0 then
+	if curr_hp ~= nil and curr_hp > 0 and string.len(cmd) > 0 then
 		local c = string.sub(cmd, 1, 1)
-		local attr = {updates = {}, ranges = {}, hp=currHP, mp=currMP}
-		if c == "e" then
-			return true
+		local attr = {updates = {}, ranges = {}, hp=curr_hp, mp=curr_mp}
+		if c == "c" or c == "b" or c == "e" then
+			return c
 		elseif c == "w" then
-			currDir = utils.encodeDir(0, -1)
-			currY = currY - 1
-			message.request("move", { dir = currDir })
+			curr_dir = utils.encode_dir(0, -1)
+			curr_y = curr_y - 1
+			message.request("move", { dir = curr_dir })
 		elseif c == "s" then
-			currDir = utils.encodeDir(0, 1)
-			currY = currY + 1
-			message.request("move", { dir = currDir })
+			curr_dir = utils.encode_dir(0, 1)
+			curr_y = curr_y + 1
+			message.request("move", { dir = curr_dir })
 		elseif c == "a" then
-			currDir = utils.encodeDir(-1, 0)
-			currX = currX - 1
-			message.request("move", { dir = currDir })
+			curr_dir = utils.encode_dir(-1, 0)
+			curr_x = curr_x - 1
+			message.request("move", { dir = curr_dir })
 		elseif c == "d" then
-			currDir = utils.encodeDir(1, 0)
-			currX = currX + 1
-			message.request("move", { dir = currDir })
+			curr_dir = utils.encode_dir(1, 0)
+			curr_x = curr_x + 1
+			message.request("move", { dir = curr_dir })
 		elseif c == "p" then
 			message.request("attack")
-			local x, y = utils.decodeDir(currDir)
-			table.insert(attr.ranges, utils.getRangeSquare(currX+x, currY+y, 1))
+			local x, y = utils.decode_dir(curr_dir)
+			table.insert(attr.ranges, utils.get_range_square(curr_x+x, curr_y+y, 1))
 			attr.symbol = "+"
 		end
-		attr.x = currX
-		attr.y = currY
-		attr.dir = currDir
+		attr.x = curr_x
+		attr.y = curr_y
+		attr.dir = curr_dir
 		attr.time = curr_frame
 		print_update(attr)
 	end
-	return false
+	return "w"
 end
 
 return world
