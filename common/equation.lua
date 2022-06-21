@@ -27,7 +27,7 @@ function equation.get_init_mp()
 end
 
 function equation.cal_free_attr(attr)
-	local total = attr["level"] * 20
+	local total = attr["level"] * 25
 	for k, v in pairs(attr) do
 		if k ~= "level" then
 			total = total - v
