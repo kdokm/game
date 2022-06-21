@@ -6,7 +6,7 @@ local size_y = utils.y_max // utils.num_zones_y
 local monsters = {wolf = "wolf"}
 local monsters_in_zones = {{}, {wolf=3}, {wolf=5}, {wolf=3}}
 
-function utils.genStr(num, len)
+function utils.gen_str(num, len)
 	s = tostring(num)
 	while(string.len(s) < len)
 	do
@@ -15,11 +15,11 @@ function utils.genStr(num, len)
 	return s
 end
 
-function utils.encodeDir(x, y)
+function utils.encode_dir(x, y)
 	return x * 2 + y
 end
 
-function utils.decodeDir(dir)
+function utils.decode_dir(dir)
 	if dir == -2 then
 		return -1, 0
 	elseif dir == 2 then
@@ -31,7 +31,7 @@ function utils.decodeDir(dir)
 	end
 end
 
-function utils.dirStr(dir)
+function utils.dir_str(dir)
 	if dir == -2 then
 		return "<"
 	elseif dir == 2 then
@@ -43,11 +43,11 @@ function utils.dirStr(dir)
 	end
 end
 
-function utils.getInitDir()
+function utils.get_init_dir()
 	return 2
 end
 
-function utils.inRangeSquare(x1, y1, x2, y2, r)
+function utils.in_range_square(x1, y1, x2, y2, r)
 	local d = x1 - x2
 	if d > r or d < -r then
 		return false
@@ -59,19 +59,19 @@ function utils.inRangeSquare(x1, y1, x2, y2, r)
 	return true
 end
 
-function utils.getRangeSquare(x, y, r)
+function utils.get_range_square(x, y, r)
 	local range = {}
 	range.upperLeft = {x=x-r, y=y-r}
 	range.lowerRight = {x=x+r, y=y+r}
 	return range
 end
 
-local function decodeZone(zone_id)
+local function decode_zone(zone_id)
 	return zone_id % utils.num_zones_x, zone_id // utils.num_zones_x
 end
 
-function utils.initPos(zone_id, mode)
-	local zone_x, zone_y = decodeZone(zone_id)
+function utils.init_pos(zone_id, mode)
+	local zone_x, zone_y = decode_zone(zone_id)
 	local x_min = zone_x * size_x
 	local y_min = zone_y * size_y
 
@@ -83,7 +83,7 @@ function utils.initPos(zone_id, mode)
 	end
 end
 
-function utils.getZoneID(x, y)
+function utils.get_zone_id(x, y)
 	return x // size_x + y // size_y * utils.num_zones_x
 end
 
@@ -91,11 +91,11 @@ function utils.dist(x1, y1, x2, y2)
 	return math.abs(x1-x2) + math.abs(y1-y2)
 end
 
-function utils.getMonsters(zone_id)
+function utils.get_monsters(zone_id)
 	return monsters_in_zones[zone_id+1] 
 end
 
-function utils.getDisplayID(id)
+function utils.get_display_id(id)
 	local res = string.match(id, "(%l+)%d+")
 	if res ~= nil and monsters[res] ~= nil then
 		return res

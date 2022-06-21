@@ -16,27 +16,27 @@ local function dispatch(id)
 				zone_id = v
 			end
 		end
-		x, y = utils.initPos(zone_id, "center")
+		x, y = utils.init_pos(zone_id, "center")
 	else
 		x = tonumber(string.sub(r, 1, utils.pos_digit))
                                 y = tonumber(string.sub(r, utils.pos_digit+1))
-		zone_id = utils.getZoneID(x, y)
+		zone_id = utils.get_zone_id(x, y)
 	end
 	return zone_id, x, y
 end
 
-function CMD.initPlayer(id, fd)
+function CMD.init_player(id, fd)
 	local zone_id, x, y = dispatch(id)
 	amounts[zone_id] = amounts[zone_id] + 1
-	skynet.call(zones[zone_id], "lua", "initPlayer", id, fd, {x=x, y=y})
+	skynet.call(zones[zone_id], "lua", "init_player", id, {fd=fd, x=x, y=y})
 	return zones[zone_id]
 end
 
-function CMD.updateZone(id, fd, attr, old, new)
+function CMD.update_zone(id, info, detail_attr, old, new)
 	amounts[old] = amounts[old] - 1
 	if new ~= nil then
 		amounts[new] = amounts[new] + 1
-		skynet.call(zones[new], "lua", "initPlayer", id, fd, attr)
+		skynet.call(zones[new], "lua", "init_player", id, info, detail_attr)
 		return zones[new]
 	end
 end

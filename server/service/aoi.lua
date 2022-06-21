@@ -1,58 +1,50 @@
 local skynet = require "skynet"
 require "skynet.manager"
-local socket = require "skynet.socket"
-local sproto = require "sproto"
-local sprotoloader = require "sprotoloader"
 local utils = require "utils"
+local socket = require "socket"
 local equation = require "equation"
 
 local CMD = {}
 grids = {}
 updates = {}
-attrs = {}
-fds = {}
+entities = {}
 services = {}
 local time = 0
 local real_time
-local rowSize = 100
-
-local function send_package(fd, pack)
-	local package = string.pack(">s2", pack)
-	socket.write(fd, package)
-end
+local row_size = 100
 
 local function push(id)
 	local r = {}
 	for k, v in pairs(updates[id]) do
 		if k ~= id then
-			table.insert(r, attrs[k])
+			table.insert(r, entities[k])
 		end
 	end
 
 	local res = {}
-	res.x = attrs[id].x
-	res.y = attrs[id].y
-	res.hp = attrs[id].hp
-	res.mp = attrs[id].mp
-	res.dir = attrs[id].dir
-	res.ranges = attrs[id].ranges
+	res.x = entities[id].x
+	res.y = entities[id].y
+	res.hp = entities[id].hp
+	res.mp = entities[id].mp
+	res.dir = entities[id].dir
+	res.ranges = entities[id].ranges
 	res.updates = r
 	res.time = time
 
-	if attrs[id].type == "player" then
-		send_package(fds[id], send_request("push", res))
+	if entities[id].type == "player" then
+		socket.send_package(entities[id].fd, socket.send_request("push", res))
 	else
 		skynet.call(services[id], "lua", "react", res)
 	end
 	updates[id] = {}
-	attrs[id].ranges = {}
+	entities[id].ranges = {}
 end
 
-local function getGridIndex(x, y)
-	return x // 5 + y // 5 * rowSize;
+local function get_grid_index(x, y)
+	return x // 5 + y // 5 * row_size;
 end
 
-local function updateOneGrid(id, grid, init)
+local function update_one_grid(id, grid, init)
 	if grid ~= nil then
 		for k, v in pairs(grid) do
 			updates[k][id] = id
@@ -63,23 +55,23 @@ local function updateOneGrid(id, grid, init)
 	end
 end
 
-local function changeGrid(id, old, new)
+local function change_grid(id, old, new)
 	if old == nil then
 		if grids[new] == nil then
 			grids[new] = {}
 		end
 		grids[new][id] = id
 		for i = -1, 1 do
-			for j = -rowSize, rowSize, rowSize do
-				updateOneGrid(id, grids[new+i+j], true)
+			for j = -row_size, row_size, row_size do
+				update_one_grid(id, grids[new+i+j], true)
 			end
 		end
 	else
 		grids[old][id] = nil
 		if new == nil then
 			for i = -1, 1 do
-				for j = -rowSize, rowSize, rowSize do
-					updateOneGrid(id, grids[old+i+j], true)
+				for j = -row_size, row_size, row_size do
+					update_one_grid(id, grids[old+i+j], true)
 				end
 			end
 		else
@@ -88,60 +80,58 @@ local function changeGrid(id, old, new)
 			end
 			grids[new][id] = id
 			local diff = new - old
-			if diff % rowSize == 0 then
+			if diff % row_size == 0 then
 				for i = -1, 1 do
-					updateOneGrid(id, grids[new+diff+i], true)
+					update_one_grid(id, grids[new+diff+i], true)
 				end
 			else
-				for i = -rowSize, rowSize, rowSize do
-					updateOneGrid(id, grids[new+diff+i], true)
+				for i = -row_size, row_size, row_size do
+					update_one_grid(id, grids[new+diff+i], true)
 				end
 			end
 		end
 	end
 end
 
-function CMD.init(id, attr, info)
-	attrs[id] = attr
-	attrs[id].id = id
-	attrs[id].ranges = {}
-	if attrs[id].type == "player" then
-		fds[id] = info
-	else
-		services[id] = info
+function CMD.init(id, info, service)
+	entities[id] = info
+	entities[id].id = id
+	entities[id].ranges = {}
+	if entities[id].type ~= "player" then
+		services[id] = service
 	end
 	updates[id] = {}
-	changeGrid(id, nil, getGridIndex(attr.x, attr.y))
+	change_grid(id, nil, get_grid_index(info.x, info.y))
 end
 
 function CMD.move(id, x, y, dir)
-	local old = getGridIndex(attrs[id].x, attrs[id].y)
-	local new = getGridIndex(x, y)
-	attrs[id].x = x
-	attrs[id].y = y
-	attrs[id].dir = dir
+	local old = get_grid_index(entities[id].x, entities[id].y)
+	local new = get_grid_index(x, y)
+	entities[id].x = x
+	entities[id].y = y
+	entities[id].dir = dir
 	for i = -1, 1 do
-		for j = -rowSize, rowSize, rowSize do
-			updateOneGrid(id, grids[new+i+j])
+		for j = -row_size, row_size, row_size do
+			update_one_grid(id, grids[new+i+j])
 		end
 	end
 	if old ~= new then
-		changeGrid(id, old, new)
+		change_grid(id, old, new)
 	end
 end
 
 function CMD.attack(id, type, x, y)
 	local r = {}
-	local index = getGridIndex(attrs[id].x, attrs[id].y)
+	local index = get_grid_index(entities[id].x, entities[id].y)
 	for i = -1, 1 do
-		for j = -rowSize, rowSize, rowSize do
+		for j = -row_size, row_size, row_size do
 			local grid = grids[index+i+j]
 			if grid ~= nil then
 				for k, v in pairs(grid) do
 					if k ~= id then
-						table.insert(attrs[k].ranges, utils.getRangeSquare(x, y, 1))
-						if attrs[k].type == type 
-						and utils.inRangeSquare(x, y, attrs[k].x, attrs[k].y, 1) then
+						table.insert(entities[k].ranges, utils.get_range_square(x, y, 1))
+						if entities[k].type == type 
+						and utils.in_range_square(x, y, entities[k].x, entities[k].y, 1) then
 							r[k] = k
 						end
 					end
@@ -152,30 +142,29 @@ function CMD.attack(id, type, x, y)
 	return r
 end
 
-function CMD.updateHP(info)
+function CMD.update_hp(info)
 	for k, v in pairs(info) do
-		attrs[k].hp = v
-		local index = getGridIndex(attrs[k].x, attrs[k].y)
+		entities[k].hp = v
+		local index = get_grid_index(entities[k].x, entities[k].y)
 		for i = -1, 1 do
-			for j = -rowSize, rowSize, rowSize do
-				updateOneGrid(k, grids[index+i+j])
+			for j = -row_size, row_size, row_size do
+				update_one_grid(k, grids[index+i+j])
 			end
 		end
 	end
 end
 
 function CMD.quit(id)
-	local fd = fds[id]
-	changeGrid(id, getGridIndex(attrs[id].x, attrs[id].y), nil)
+	local fd = entities[id].fd
+	change_grid(id, get_grid_index(entities[id].x, entities[id].y), nil)
 	updates[id] = nil
-	attrs[id] = nil
-	fds[id] = nil
+	entities[id] = nil
 	return fd
 end
 
-local function pushAll()
+local function push_all()
 	for k, v in pairs(updates) do
-		if next(v) ~= nil or next(attrs[k].ranges) ~= nil then
+		if next(v) ~= nil or next(entities[k].ranges) ~= nil then
 			push(k)
 		end
 	end
@@ -188,12 +177,10 @@ skynet.start(function()
 		skynet.ret(skynet.pack(f(...)))
 	end)
 
-	host = sprotoloader.load(1):host "package"
-	send_request = host:attach(sprotoloader.load(2))
 	skynet.fork(function()
 		while true do
 			real_time = skynet.now()
-			pushAll()
+			push_all()
 			local diff = 10-(skynet.now()-real_time)
 			if diff > 0 then
 				skynet.sleep(diff)

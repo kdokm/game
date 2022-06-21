@@ -1,7 +1,5 @@
 local skynet = require "skynet"
-local socket = require "skynet.socket"
-local sproto = require "sproto"
-local sprotoloader = require "sprotoloader"
+local socket = require "socket"
 local weapon = require "weapon"
 local armor = require "armor"
 local bag = require "bag"
@@ -19,11 +17,15 @@ local client_fd
 local client_id
 local zone
 
-function REQUEST:getAttr()
-	return { result = panel.getAttr() }
+function REQUEST:get_attr()
+	local r = attr.get_attr(client_id)
+	skynet.error(r.str)
+	return {attr = r}
 end
 
-function REQUEST:updateAttr()
+function REQUEST:set_attr()
+	attr.update_attr(client_id, self.attr)
+	return attr.get_attr(client_id)
 end
 
 function REQUEST:getSkill()
@@ -111,16 +113,11 @@ local function request(name, args, response)
 	end
 end
 
-local function send_package(pack)
-	local package = string.pack(">s2", pack)
-	socket.write(client_fd, package)
-end
-
 skynet.register_protocol {
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
 	unpack = function (msg, sz)
-		return host:dispatch(msg, sz)
+		return socket.host:dispatch(msg, sz)
 	end,
 	dispatch = function (fd, _, type, ...)
 		assert(fd == client_fd)	-- You can use fd to reply message
@@ -130,7 +127,7 @@ skynet.register_protocol {
 			local ok, result  = pcall(request, ...)
 			if ok then
 				if result then
-					send_package(result)
+					socket.send_package(client_fd, result)
 				end
 			else
 				skynet.error(result)
@@ -146,11 +143,9 @@ function CMD.start(conf)
 	local gate = conf.gate
 	WATCHDOG = conf.watchdog
 	-- slot 1,2 set at main.lua
-	host = sprotoloader.load(1):host "package"
-	send_request = host:attach(sprotoloader.load(2))
 	skynet.fork(function()
 		while true do
-			send_package(send_request "heartbeat")
+			socket.send_package(conf.fd, socket.send_request("heartbeat"))
 			skynet.sleep(500)
 		end
 	end)
@@ -159,7 +154,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	--equips = bag.init(client_id)
-	zone = skynet.call("world", "lua", "initPlayer", client_id, client_fd)
+	zone = skynet.call("world", "lua", "init_player", client_id, client_fd)
 end
 
 function CMD.disconnect()

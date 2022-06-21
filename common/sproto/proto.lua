@@ -8,6 +8,14 @@ proto.c2s = sprotoparser.parse [[
 	session 1 : integer
 }
 
+.attribute {
+	level 0 : integer
+	end 1 : integer
+	spr 2 : integer
+	str 3 : integer
+	dex 4 : integer
+}
+
 handshake 1 {
 	response {
 		msg 0  : string
@@ -56,7 +64,22 @@ move 7 {
 
 attack 8 {}
 
-quit 9 {}
+get_attr 9 {
+	response {
+		attr 0 : attribute	
+	}
+}
+
+set_attr 10 {
+	request {
+		attr 0 : attribute
+	}
+	response {
+		attr 0 : attribute
+	}
+}
+
+quit 11 {}
 
 ]]
 
@@ -80,8 +103,8 @@ proto.s2c = sprotoparser.parse [[
 }
 
 .range {
-	upperLeft 0 : point
-	lowerRight 1 : point
+	upper_left 0 : point
+	lower_right 1 : point
 }
 
 heartbeat 1 {}
@@ -96,6 +119,14 @@ push 2 {
 		updates 5 : *update
 		ranges 6 : *range
 		time 7 : integer
+	}
+}
+
+drop 3 {
+	request {
+		level 0 : integer
+		exp 1 : integer
+		items 2 : *string
 	}
 }
 

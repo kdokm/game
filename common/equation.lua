@@ -2,36 +2,36 @@ local weapon = require "weapon"
 local armor = require "armor"
 local attach = require "attach"
 
-local equation = {}
+local equation = {attr = {"end", "spr", "str", "dex"}}
 local detail = { "hp", "mp", "atk", "def", "spd" }
 for k, v in pairs(detail) do
-	detail[k] = string.sub(v, 1, attach["attrDigit"])
+	detail[k] = string.sub(v, 1, attach["attr_digit"])
 end
 
-function equation.getInitAttrVal()
+function equation.get_init_attr_val()
 	return 5
 end
 
-local function calHP(en, spr)
+local function cal_hp(en, spr)
 	return en * 50 + spr * 50
 end
 
-local function calMP(spr)
+local function cal_mp(spr)
 	return spr * 50
 end
 
-function equation.getInitHP()
-	local attr = equation.getInitAttrVal()
-	return calHP(attr, attr)
+function equation.get_init_hp()
+	local attr = equation.get_init_attr_val()
+	return cal_hp(attr, attr)
 end
 
-function equation.getInitMP()
-	local attr = equation.getInitAttrVal()
-	return calMP(attr)
+function equation.get_init_mp()
+	local attr = equation.get_init_attr_val()
+	return cal_mp(attr)
 end
 
-function equation.calFreeAttrs(attrs)
-	local total = attrs["level"] * 10
+function equation.cal_free_attrs(attrs)
+	local total = attrs["level"] * 20
 	for k, v in pairs(attrs) do
 		if k ~= "level" then
 			total = total - v
@@ -40,7 +40,7 @@ function equation.calFreeAttrs(attrs)
 	return total
 end
 
-local function calEquips(equips)
+local function cal_equips(equips)
 	local r = {}
 	for k, v in pairs(detail) do
 		r[v] = 0
@@ -48,26 +48,26 @@ local function calEquips(equips)
 
 	for k, v in pairs(equips) do
 		local p
-		if weapon.isWeapon(v) then
-			local type = string.sub(v, 2, weapon["typeEnd"])
-			local spec = string.sub(v, weapon["typeEnd"]+1, weapon["specEnd"])
-			local n = string.sub("atk", 1, attach["attrDigit"])
+		if weapon.is_weapon(v) then
+			local type = string.sub(v, 2, weapon["type_end"])
+			local spec = string.sub(v, weapon["type_end"]+1, weapon["spec_end"])
+			local n = string.sub("atk", 1, attach["attr_digit"])
 			r[n] = r[n] + weapon["type"][type]["atk"] * weapon["spec"][spec]["level"]
-			p = weapon["specEnd"] + 1
+			p = weapon["spec_end"] + 1
 		else
-			local type = string.sub(v, 2, armor["typeEnd"])
-			local spec = string.sub(v, armor["typeEnd"]+1, armor["specEnd"])
-			local n = string.sub("atk", 1, attach["attrDigit"])
+			local type = string.sub(v, 2, armor["type_end"])
+			local spec = string.sub(v, armor["type_end"]+1, armor["spec_end"])
+			local n = string.sub("atk", 1, attach["attr_digit"])
 			r[n] = r[n] + armor["type"][type]["atk"] * armor["spec"][spec]["level"]
-			p = armor["specEnd"] + 1
+			p = armor["spec_end"] + 1
 		end
 
 		local next
 		while p < string.len(v) do
-			next = p + attach["attrDigit"]
+			next = p + attach["attr_digit"]
 			local attr = string.sub(v, p, next-1)
 			p = next
-			next = p+attach["valDigit"]
+			next = p+attach["val_digit"]
 			local val = string.sub(v, p, next-1)
 			p = next
 			r[attr] = r[attr] + tonumber(val)
@@ -76,19 +76,19 @@ local function calEquips(equips)
 	return r
 end
 
-function equation.calDetail(basic_attrs, equips)
-	local eq_attrs = calEquips(equips)
+function equation.cal_detail(basic_attrs, equips)
+	local eq_attrs = cal_equips(equips)
 	detailed_attrs = {
-		hp = calHP(basic_attrs["end"], basic_attrs["spr"]) + eq_attrs["h"],
-		mp = calMP(basic_attrs["spr"]) + eq_attrs["m"],
-		atk = basic_attrs["str"] * 10 + eq_attrs["a"],
-		def = basic_attrs["end"] * 5 + eq_attrs["d"],
-		spd = basic_attrs["dex"] * 10 + eq_attrs["s"]
+		hp = cal_hp(basic_attrs["end"], basic_attrs["spr"]) + eq_attrs["hp"],
+		mp = cal_mp(basic_attrs["spr"]) + eq_attrs["mp"],
+		atk = basic_attrs["str"] * 10 + eq_attrs["atk"],
+		def = basic_attrs["end"] * 5 + eq_attrs["def"],
+		spd = basic_attrs["dex"] * 10 + eq_attrs["spd"]
 	}
 	return detailed_attrs
 end
 
-function equation.calDamage(detailed_attrs)
+function equation.cal_damage(detailed_attrs)
 	
 end
 
