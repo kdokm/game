@@ -167,12 +167,15 @@ void cls(HANDLE hConsole)
 
 static int
 lwrite_buffer(lua_State *L) {
+	int flag = luaL_checkinteger(L, 1);
 	char data[6400];
 	COORD coord = { 0, 0 };
 	DWORD bytes = 0;
 	ReadConsoleOutputCharacterA(hStdout, data, 6400, coord, &bytes);
             	WriteConsoleOutputCharacterA(hOutBuf, data, 6400, coord, &bytes);
-	cls(hStdout);
+	if (flag) {
+		cls(hStdout);
+	}
 	return 0;
 }
 

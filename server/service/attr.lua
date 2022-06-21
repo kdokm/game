@@ -4,10 +4,15 @@ local equation = require "equation"
 
 local attr = {}
 
-function attr.update_attr(id, a)
-	for k, v in pairs(a) do
-		skynet.call("redis", "lua", "hset", "A", id, k, v)
+local function init_attr(id)
+	local a = {}
+	a.level = 1
+	skynet.call("redis", "lua", "hset", "A", id, "level", 1)
+	for k, v in pairs(equation.attr) do
+		a[v] = equation.get_init_attr_val()
+		skynet.call("redis", "lua", "hset", "A", id, v, a[v])
 	end
+	return a
 end
 
 function attr.get_attr(id)
@@ -15,17 +20,20 @@ function attr.get_attr(id)
 	local r = skynet.call("redis", "lua", "hgetall", "A", id)
 	local a = {}
 	if next(r) == nil then
-		a.level = 1
-		for i = 1, #equation.attr do
-			a[equation.attr[i]] = equation.get_init_attr_val()
-		end
-		attr.update_attr(id, a)
+		a = init_attr(id)
 	else
 		for i = 1, #r, 2 do
 			a[r[i]] = r[i+1]
 		end
 	end
 	return a
+end
+
+function attr.update_attr(id, a)
+	local r = attr.get_attr(id)
+	for k, v in pairs(a) do
+		skynet.call("redis", "lua", "hset", "A", id, k, v)
+	end
 end
 
 function attr.get_skill(id)

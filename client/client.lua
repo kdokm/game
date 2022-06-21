@@ -50,7 +50,16 @@ function event:get_attr(req, resp)
 		funcs["c"].update_attr(resp.attr)
 	else
 		print("error")
-		lcontrol.write_buffer()
+		lcontrol.write_buffer(1)
+	end
+end
+
+function event:set_attr(req, resp)
+	if resp.attr ~= nil then
+		funcs["c"].update_attr(resp.attr)
+	else
+		print("error")
+		lcontrol.write_buffer(1)
 	end
 end
 

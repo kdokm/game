@@ -25,7 +25,7 @@ end
 
 function REQUEST:set_attr()
 	attr.update_attr(client_id, self.attr)
-	return attr.get_attr(client_id)
+	return {attr = attr.get_attr(client_id)}
 end
 
 function REQUEST:getSkill()
