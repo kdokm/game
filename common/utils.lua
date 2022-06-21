@@ -61,8 +61,8 @@ end
 
 function utils.get_range_square(x, y, r)
 	local range = {}
-	range.upperLeft = {x=x-r, y=y-r}
-	range.lowerRight = {x=x+r, y=y+r}
+	range.upper_left = {x=x-r, y=y-r}
+	range.lower_right = {x=x+r, y=y+r}
 	return range
 end
 

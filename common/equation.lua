@@ -2,22 +2,18 @@ local weapon = require "weapon"
 local armor = require "armor"
 local attach = require "attach"
 
-local equation = {attr = {"end", "spr", "str", "dex"}}
-local detail = { "hp", "mp", "atk", "def", "spd" }
-for k, v in pairs(detail) do
-	detail[k] = string.sub(v, 1, attach["attr_digit"])
-end
+local equation = {attr = {"vit", "wil", "str", "agi"}, detail = { "hp", "mp", "atk", "def", "spd" }}
 
 function equation.get_init_attr_val()
 	return 5
 end
 
-local function cal_hp(en, spr)
-	return en * 50 + spr * 50
+local function cal_hp(vit, wil)
+	return vit * 50 + wil * 50
 end
 
-local function cal_mp(spr)
-	return spr * 50
+local function cal_mp(wil)
+	return wil * 50
 end
 
 function equation.get_init_hp()
@@ -42,7 +38,7 @@ end
 
 local function cal_equips(equips)
 	local r = {}
-	for k, v in pairs(detail) do
+	for k, v in pairs(equation.detail) do
 		r[v] = 0
 	end
 
@@ -79,11 +75,11 @@ end
 function equation.cal_detail(basic_attrs, equips)
 	local eq_attrs = cal_equips(equips)
 	detailed_attrs = {
-		hp = cal_hp(basic_attrs["end"], basic_attrs["spr"]) + eq_attrs["hp"],
-		mp = cal_mp(basic_attrs["spr"]) + eq_attrs["mp"],
+		hp = cal_hp(basic_attrs["vit"], basic_attrs["wil"]) + eq_attrs["hp"],
+		mp = cal_mp(basic_attrs["wil"]) + eq_attrs["mp"],
 		atk = basic_attrs["str"] * 10 + eq_attrs["atk"],
-		def = basic_attrs["end"] * 5 + eq_attrs["def"],
-		spd = basic_attrs["dex"] * 10 + eq_attrs["spd"]
+		def = basic_attrs["vit"] * 5 + eq_attrs["def"],
+		spd = basic_attrs["agi"] * 10 + eq_attrs["spd"]
 	}
 	return detailed_attrs
 end

@@ -10,10 +10,10 @@ proto.c2s = sprotoparser.parse [[
 
 .attribute {
 	level 0 : integer
-	end 1 : integer
-	spr 2 : integer
+	vit 1 : integer
+	wil 2 : integer
 	str 3 : integer
-	dex 4 : integer
+	agi 4 : integer
 }
 
 handshake 1 {

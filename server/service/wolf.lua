@@ -27,9 +27,9 @@ local function action()
 			skynet.call(zone, "lua", "attack", monster_id)
 		else
 			if math.abs(pos.x-target.x) > math.abs(pos.y-target.y) then
-				dir = utils.encodeDir(move_dir(pos.x, target.x), 0)
+				dir = utils.encode_dir(move_dir(pos.x, target.x), 0)
 			else
-				dir = utils.encodeDir(0, move_dir(pos.y, target.y))
+				dir = utils.encode_dir(0, move_dir(pos.y, target.y))
 			end
 			skynet.call(zone, "lua", "move", monster_id, dir)
 		end

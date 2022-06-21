@@ -14,6 +14,7 @@ local entities = {}
 local updates = {}
 local curr_frame
 local self_id
+local init = false
 
 local function print_options()
 	lcontrol.jump(0, 34)
@@ -145,38 +146,49 @@ function world.control(id, cmd)
 		end
 		curr_frame = curr_frame + 1
 	end
-	if curr_hp ~= nil and curr_hp > 0 and string.len(cmd) > 0 then
-		local c = string.sub(cmd, 1, 1)
+	if curr_hp ~= nil then
 		local attr = {updates = {}, ranges = {}, hp=curr_hp, mp=curr_mp}
-		if c == "c" or c == "b" or c == "e" then
-			return c
-		elseif c == "w" then
-			curr_dir = utils.encode_dir(0, -1)
-			curr_y = curr_y - 1
-			message.request("move", { dir = curr_dir })
-		elseif c == "s" then
-			curr_dir = utils.encode_dir(0, 1)
-			curr_y = curr_y + 1
-			message.request("move", { dir = curr_dir })
-		elseif c == "a" then
-			curr_dir = utils.encode_dir(-1, 0)
-			curr_x = curr_x - 1
-			message.request("move", { dir = curr_dir })
-		elseif c == "d" then
-			curr_dir = utils.encode_dir(1, 0)
-			curr_x = curr_x + 1
-			message.request("move", { dir = curr_dir })
-		elseif c == "p" then
-			message.request("attack")
-			local x, y = utils.decode_dir(curr_dir)
-			table.insert(attr.ranges, utils.get_range_square(curr_x+x, curr_y+y, 1))
-			attr.symbol = "+"
+		local flag = false
+		if not init then
+			flag = true
+			init = true
+		elseif curr_hp > 0 and string.len(cmd) > 0 then
+			flag = true
+			local c = string.sub(cmd, 1, 1)
+			if c == "c" or c == "b" or c == "e" then
+				init = false
+				curr_frame = nil
+				return c
+			elseif c == "w" then
+				curr_dir = utils.encode_dir(0, -1)
+				curr_y = curr_y - 1
+				message.request("move", { dir = curr_dir })
+			elseif c == "s" then
+				curr_dir = utils.encode_dir(0, 1)
+				curr_y = curr_y + 1
+				message.request("move", { dir = curr_dir })
+			elseif c == "a" then
+				curr_dir = utils.encode_dir(-1, 0)
+				curr_x = curr_x - 1
+				message.request("move", { dir = curr_dir })
+			elseif c == "d" then
+				curr_dir = utils.encode_dir(1, 0)
+				curr_x = curr_x + 1
+				message.request("move", { dir = curr_dir })
+			elseif c == "p" then
+				message.request("attack")
+				local x, y = utils.decode_dir(curr_dir)
+				table.insert(attr.ranges, utils.get_range_square(curr_x+x, curr_y+y, 1))
+				attr.symbol = "+"
+			end
 		end
-		attr.x = curr_x
-		attr.y = curr_y
-		attr.dir = curr_dir
-		attr.time = curr_frame
-		print_update(attr)
+		if flag then
+			attr.x = curr_x
+			attr.y = curr_y
+			attr.dir = curr_dir
+			attr.time = curr_frame
+			print_update(attr)
+		end
 	end
 	return "w"
 end
