@@ -124,7 +124,7 @@ local function print_update(args)
 			print_ranges(args)
 		end
 	end
-	lcontrol.write_buffer()
+	lcontrol.write_buffer(1)
 end
 
 function world.update(args, symbol)

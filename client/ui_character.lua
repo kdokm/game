@@ -12,7 +12,7 @@ local arrow_x = 70
 local curr_offset = 2
 local attr
 local detail
-local skills
+local abilities
 local init = false
 
 local function print_options()
@@ -21,7 +21,7 @@ local function print_options()
 	if state == "attr" then
 		print(" W: previous attribute,   S: next attribute,   A: add current attribute,   Space: confirm the change\n\n")
 		common.print_line()
-		io.write("     Skill (s)"..pre..pre.."Back (b)"..pre..pre.."Exit (Esc)")
+		io.write("     Ability (a)"..pre..pre.."Back (b)"..pre..pre.."Exit (Esc)")
 	else
 		print(" W: previous skill, S: next skill, A: level up current skill, Space: confirm the change\n\n")
 		common.print_line()
@@ -41,12 +41,12 @@ local function print_attr()
 		print(string.upper(d)..": "..detail[d].."\n")
 	end
 	io.write(pre..pre.."free points: "..attr.free)
-	lcontrol.jump(detail_x, start_y + (#equation.attr+2) * 2)
+	lcontrol.jump(detail_x, start_y + 12)
 	io.write("SPD: "..detail.spd)
-	lcontrol.jump(arrow_x, start_y+4)
+	lcontrol.jump(arrow_x, start_y + 4)
 	io.write("<-")
 	print_options()
-	lcontrol.write_buffer()
+	lcontrol.write_buffer(0)
 end
 
 function character.update_attr(a)
@@ -57,6 +57,25 @@ function character.update_attr(a)
 end
 
 local function print_control(c)
+	if c == "w" then
+		if curr_offset > 2 then
+			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+			io.write("  ")
+			curr_offset = curr_offset - 1
+			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+			io.write("<-")
+			lcontrol.write_buffer(0)
+		end
+	elseif c == "s" then
+		if curr_offset < 5 then
+			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+			io.write("  ")
+			curr_offset = curr_offset + 1
+			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+			io.write("<-")
+			lcontrol.write_buffer(0)
+		end
+	end
 end
 
 function character.control(id, cmd)
@@ -75,14 +94,13 @@ function character.control(id, cmd)
 			return c
 		elseif c == "b" then
 			state = nil
-			curr_offset = 0
+			curr_offset = 2
+			lcontrol.write_buffer(1)
 			return "w"
-		elseif c == "s" then
+		elseif c == "a" then
 			if state == "attr" then
 				print_skill()
-			end
-		elseif c == "a" then
-			if state == "skill" then
+			else
 				print_attr()
 			end
 		else
