@@ -6,9 +6,10 @@ local equation = require "equation"
 local character = {}
 local pre = common.pre
 local state
-local start_y = 12
-local arrow_x = 65
-local curr_offset = 0
+local start_y = 10
+local detail_x = 90
+local arrow_x = 70
+local curr_offset = 2
 local attr
 local detail
 local skills
@@ -30,15 +31,19 @@ end
 
 local function print_attr()
 	state = "attr"
-	lcontrol.jump(0, start_y)
-	local sub_pre = "                         "
-	print(pre..sub_pre.."LEVEL: "..attr.level..pre.."HP: "..detail.hp.."\n")
+	lcontrol.jump(75, start_y)
+	print("LEVEL: "..attr.level.."\n\n\n")
 	for i = 1, #equation.attr do
 		local a = equation.attr[i]
-		local d = equation.detail[i+1]
-		print(pre..sub_pre..string.upper(a)..": "..attr[a]..pre.."  "..string.upper(d)..": "..detail[d].."\n")
+		local d = equation.detail[i]
+		io.write(pre..pre..string.upper(a)..": "..attr[a])
+		lcontrol.jump(detail_x, start_y + (i+1) * 2)
+		print(string.upper(d)..": "..detail[d].."\n")
 	end
-	lcontrol.jump(arrow_x, start_y+2)
+	io.write(pre..pre.."free points: "..attr.free)
+	lcontrol.jump(detail_x, start_y + (#equation.attr+2) * 2)
+	io.write("SPD: "..detail.spd)
+	lcontrol.jump(arrow_x, start_y+4)
 	io.write("<-")
 	print_options()
 	lcontrol.write_buffer()
@@ -46,6 +51,7 @@ end
 
 function character.update_attr(a)
 	attr = a
+	attr.free = equation.cal_free_attr(attr)
 	detail = equation.cal_detail(a, {})
 	print_attr()
 end
