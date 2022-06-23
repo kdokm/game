@@ -31,7 +31,6 @@ function attr.get_attr(id)
 end
 
 function attr.update_attr(id, a)
-	local r = attr.get_attr(id)
 	for k, v in pairs(a) do
 		skynet.call("redis", "lua", "hset", "A", id, k, v)
 	end

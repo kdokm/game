@@ -25,7 +25,9 @@ end
 
 function REQUEST:set_attr()
 	attr.update_attr(client_id, self.attr)
-	return {attr = attr.get_attr(client_id)}
+	local a = attr.get_attr(client_id)
+	skynet.call(zone, "lua", "update_attr", client_id, a)
+	return {attr = a}
 end
 
 function REQUEST:getSkill()
@@ -101,7 +103,7 @@ end
 
 function REQUEST:quit()
 	skynet.error("agent quit")
-	skynet.call("scene", "lua", "quit", client_id)
+	skynet.call(zone, "lua", "quit", client_id)
 	skynet.call(WATCHDOG, "lua", "close", client_fd)
 end
 
