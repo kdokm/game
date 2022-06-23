@@ -40,9 +40,11 @@ function event:__error(what, err, req, session)
 end
 
 function event:push(args)
-	--print(args.x)
-	--print(args.hp)
-	funcs[status].update(args)
+	funcs["w"].update(args)
+end
+
+function event:drop(args)
+	funcs["w"].drop(args)
 end
 
 function event:get_attr(req, resp)
@@ -103,6 +105,7 @@ status = "w"
 
 time = lcontrol.get_time()
 while true do
+	funcs["w"].progress(status)
 	local ret = funcs[status].control(id, lcontrol.get_pressed())
 	if ret == "e" then
 		message.request("quit")

@@ -27,7 +27,7 @@ function equation.get_init_mp()
 end
 
 function equation.cal_free_attr(attr)
-	local total = attr["level"] * 25
+	local total = attr["level"] * 5 + 15
 	for k, v in pairs(attr) do
 		if k ~= "level" then
 			total = total - v
@@ -86,6 +86,21 @@ end
 
 function equation.cal_damage(detailed_attrs)
 	
+end
+
+function equation.cal_exp_required(level)
+	return level * level * 100
+end
+
+function equation.cal_level_exp(level, exp, gain)
+	local required = equation.cal_exp_required(level)
+	exp = exp + gain
+	while exp >= required do
+		exp = exp - required
+		level = level + 1
+		required = equation.cal_exp_required(level)
+	end
+	return level, exp
 end
 
 return equation

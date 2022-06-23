@@ -48,7 +48,7 @@ function message.update()
 			if f then
 				local ok, err_msg = pcall(f, obj, resp)	-- resp is content of push
 				if not ok then
-					print(string.format("push %s for [%s] error : %s", session_id, tostring(obj), err_msg))
+					print(string.format("%s for [%s] error : %s", session_id, tostring(obj), err_msg))
 				end
 			end
 		end

@@ -15,6 +15,14 @@ function utils.gen_str(num, len)
 	return s
 end
 
+function utils.sum(data)
+	local s = 0
+	for k, v in pairs(data) do
+		s = s + v
+	end
+	return s
+end
+
 function utils.encode_dir(x, y)
 	return x * 2 + y
 end

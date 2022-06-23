@@ -7,6 +7,7 @@ local attr = {}
 local function init_attr(id)
 	local a = {}
 	a.level = 1
+	a.exp = 0
 	skynet.call("redis", "lua", "hset", "A", id, "level", 1)
 	for k, v in pairs(equation.attr) do
 		a[v] = equation.get_init_attr_val()
