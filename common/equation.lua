@@ -84,8 +84,13 @@ function equation.cal_detail(basic_attrs, equips)
 	return detailed_attrs
 end
 
-function equation.cal_damage(detailed_attrs)
-	
+function equation.cal_damage(atk, def)
+	local diff = atk.spd - def.spd
+	if diff < 0 and math.random() * 200 < -diff then
+		return 0
+	end
+	local val = atk.atk - def.def
+	return math.max(val, 1)
 end
 
 function equation.cal_exp_required(level)

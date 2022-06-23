@@ -75,15 +75,23 @@ function CMD.init_player(id, info, detail_attr)
 	socket.send_package(entities[id].fd, socket.send_request("drop", detail_attrs[id]))
 end
 
-function CMD.init_monster(id, info)
+function CMD.init_monster(id, detail_attr)
 	entities[id] = { type="monster" }
 	entities[id].hp = 300
 	entities[id].x, entities[id].y = utils.init_pos(zone_id, "random")
 	entities[id].dir = utils.get_init_dir()
 	skynet.error(entities[id].x, entities[id].y)
+	detail_attrs[id] = detail_attr
 	damage[id] = {}
 	injury[id] = {}
 	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[id])
+end
+
+function CMD.update_attr(id, a)
+	local d = equation.cal_detail(a, {})
+	for k, v in pairs(d) do
+		detail_attrs[id][k] = v
+	end
 end
 
 local function cal_portion(data, portion)
@@ -94,11 +102,11 @@ local function cal_portion(data, portion)
 	return portion
 end
 
-local function drop(damage, injury)
+local function drop(id)
 	local portion = {}
-	cal_portion(damage, portion)
-	cal_portion(injury, portion)
-	local total = 300
+	cal_portion(damage[id], portion)
+	cal_portion(injury[id], portion)
+	local total = detail_attrs[id].exp
 	for k, v in pairs(portion) do
 		detail_attrs[k].level, detail_attrs[k].exp 
 		= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, total * v // 2)
@@ -116,7 +124,7 @@ function CMD.quit(id, next)
 		end
 		detail_attrs[id] = nil
 	else
-		drop(damage[id], injury[id])
+		drop(id)
 		damage[id] = nil
 		injury[id] = nil
 	end
@@ -168,10 +176,10 @@ function CMD.attack(id)
 		r = skynet.call(aoi, "lua", "attack", id, "player", entities[id].x+x, entities[id].y+y)
 	end
 	for k, v in pairs(r) do
-		local amount = 50
 		if entities[k].hp == 0 then
 			r[k] = nil
 		else
+			local amount = equation.cal_damage(detail_attrs[id], detail_attrs[k])
 			if entities[id].type == "player" then
 				damage[k][id] = (damage[k][id] or 0) + amount
 			else
@@ -185,7 +193,7 @@ function CMD.attack(id)
 					timeout(500, revive, {k})
 				else
 					CMD.quit(k)
-					CMD.init_monster(k)
+					CMD.init_monster(k, detail_attrs[k])
 				end
 			end
 			r[k] = entities[k].hp

@@ -3,8 +3,8 @@ local utils = {x_max = 100, y_max = 100, pos_digit = 3,
 
 local size_x = utils.x_max // utils.num_zones_x
 local size_y = utils.y_max // utils.num_zones_y
-local monsters = {wolf = "wolf"}
-local monsters_in_zones = {{}, {wolf=3}, {wolf=5}, {wolf=3}}
+local monsters = {bat = "bat", wolf = "wolf"}
+local monsters_in_zones = {{}, {bat=3}, {wolf=3}, {bat=3}}
 
 function utils.gen_str(num, len)
 	s = tostring(num)
