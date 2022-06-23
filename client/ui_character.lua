@@ -148,6 +148,7 @@ function character.control(id, cmd)
 			return c
 		elseif c == "b" then
 			state = nil
+			init = false
 			curr_offset = 1
 			lcontrol.write_buffer(1)
 			return "w"

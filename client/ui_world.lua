@@ -2,6 +2,7 @@ local lcontrol = require "lcontrol"
 local message = require "message"
 local common = require "ui_common"
 local utils = require "utils"
+local equation = require "equation"
 
 local world = {}
 local pre = common.pre
@@ -15,6 +16,8 @@ local updates = {}
 local curr_frame
 local self_id
 local init = false
+local level
+local exp
 
 local function print_options()
 	lcontrol.jump(0, 34)
@@ -24,9 +27,7 @@ local function print_options()
 	io.write("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
 end
 
-local function print_upper_bar(x, y, hp, mp, dir)
-	curr_hp = hp
-	curr_mp = mp
+local function print_upper_bar(x, y, dir)
 	if curr_x == nil or utils.dist(x, y, curr_x, curr_y) > 5 then
 		curr_x = x
 		curr_y = y
@@ -35,9 +36,11 @@ local function print_upper_bar(x, y, hp, mp, dir)
 
 	lcontrol.jump(5, 1)
 	io.write("HP: "..tostring(curr_hp))
-
 	lcontrol.jump(25, 1)
 	io.write("MP: "..tostring(curr_mp))
+
+	lcontrol.jump(75, 1)
+	io.write("level "..level.." ("..exp.."/"..equation.cal_exp_required(level)..")")
 
 	lcontrol.jump(125, 1)
 	print("position: "..tostring(curr_x)..", "..tostring(curr_y))
@@ -91,7 +94,7 @@ end
 
 local function print_update(args)
 	print_options()
-	print_upper_bar(args.x, args.y, args.hp, args.mp, args.dir)
+	print_upper_bar(args.x, args.y, args.dir)
 	if args.hp == 0 then
 		lcontrol.jump(60, 15)
 		io.write("Waiting for revive...")
@@ -127,24 +130,21 @@ local function print_update(args)
 	lcontrol.write_buffer(1)
 end
 
-function world.update(args, symbol)
-	args.symbol = symbol
+function world.update(args)
 	updates[args.time] = args
 	if curr_frame == nil then
 		curr_frame = args.time - 1
 	end
 end
 
+function world.drop(args)
+	level = args.level
+	exp = args.exp
+end
+
 function world.control(id, cmd)
 	if self_id == nil then
 		self_id = id
-	end
-	if curr_frame ~= nil then
-		if updates[curr_frame] ~= nil then
-			print_update(updates[curr_frame])
-			updates[curr_frame] = nil
-		end
-		curr_frame = curr_frame + 1
 	end
 	if curr_hp ~= nil then
 		local attr = {updates = {}, ranges = {}, hp=curr_hp, mp=curr_mp}
@@ -157,7 +157,7 @@ function world.control(id, cmd)
 			local c = string.sub(cmd, 1, 1)
 			if c == "c" or c == "b" or c == "e" then
 				init = false
-				curr_frame = nil
+				--curr_frame = nil
 				return c
 			elseif c == "w" then
 				curr_dir = utils.encode_dir(0, -1)
@@ -191,6 +191,20 @@ function world.control(id, cmd)
 		end
 	end
 	return "w"
+end
+
+function world.progress(status)
+	if curr_frame ~= nil then
+		if updates[curr_frame] ~= nil then
+			curr_hp = updates[curr_frame].hp
+			curr_mp = updates[curr_frame].mp
+			if status == "w" then
+				print_update(updates[curr_frame])
+			end
+			updates[curr_frame] = nil
+		end
+		curr_frame = curr_frame + 1
+	end
 end
 
 return world

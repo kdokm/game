@@ -9,6 +9,7 @@ local entities = {}
 local monster_services = {}
 local detail_attrs = {}
 local damage = {}
+local injury = {}
 local zone_id
 local aoi
 
@@ -63,12 +64,15 @@ function CMD.init_player(id, info, detail_attr)
 		entities[id].dir = utils.get_init_dir()
 		init_hp(id)
 		init_mp(id)
-		detail_attrs[id] = equation.cal_detail(attr.get_attr(id), {})
+		local a = attr.get_attr(id)
+		detail_attrs[id] = equation.cal_detail(a, {})
+		detail_attrs[id].level = a.level
+		detail_attrs[id].exp = a.exp
 	else
 		detail_attrs[id] = detail_attr
 	end
 	skynet.call(aoi, "lua", "init", id, entities[id])
-	--socket.send_package(fd, socket.send_request("drop", res))
+	socket.send_package(entities[id].fd, socket.send_request("drop", detail_attrs[id]))
 end
 
 function CMD.init_monster(id, info)
@@ -77,14 +81,44 @@ function CMD.init_monster(id, info)
 	entities[id].x, entities[id].y = utils.init_pos(zone_id, "random")
 	entities[id].dir = utils.get_init_dir()
 	skynet.error(entities[id].x, entities[id].y)
+	damage[id] = {}
+	injury[id] = {}
 	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[id])
 end
 
+local function cal_portion(data, portion)
+	local sum = utils.sum(data)
+	for k, v in pairs(data) do
+		portion[k] = (portion[k] or 0) + v / sum
+	end
+	return portion
+end
+
+local function drop(damage, injury)
+	local portion = {}
+	cal_portion(damage, portion)
+	cal_portion(injury, portion)
+	local total = 300
+	for k, v in pairs(portion) do
+		detail_attrs[k].level, detail_attrs[k].exp 
+		= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, total * v // 2)
+		attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
+		socket.send_package(entities[k].fd, socket.send_request("drop", detail_attrs[k]))
+	end
+end
+
 function CMD.quit(id, next)
-	if next == nil and entities[id].type == "player" then
-		store_hp(id)
-		store_mp(id)
-		store_pos(id)
+	if entities[id].type == "player" then
+		if next == nil then 
+			store_hp(id)
+			store_mp(id)
+			store_pos(id)
+		end
+		detail_attrs[id] = nil
+	else
+		drop(damage[id], injury[id])
+		damage[id] = nil
+		injury[id] = nil
 	end
 	skynet.call(aoi, "lua", "quit", id)
 	local next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
@@ -138,6 +172,11 @@ function CMD.attack(id)
 		if entities[k].hp == 0 then
 			r[k] = nil
 		else
+			if entities[id].type == "player" then
+				damage[k][id] = (damage[k][id] or 0) + amount
+			else
+				injury[id][k] = (injury[id][k] or 0) + amount
+			end
 			if entities[k].hp > amount then
 				entities[k].hp = entities[k].hp - amount
 			else
