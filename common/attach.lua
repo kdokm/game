@@ -4,8 +4,8 @@ local attach = {
 	{attr = "atk", min = 5, max = 10},
 	{attr = "def", min = 3, max = 5},
 	{attr = "spd", min = 5, max = 10},
-	attrDigit = 1,
-	valDigit = 2
+	attr_digit = 1,
+	val_digit = 2
 }
 
 return attach

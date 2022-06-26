@@ -36,9 +36,9 @@ end
 function REQUEST:updateSkill()
 end
 
-function REQUEST:getBag()
+function REQUEST:get_bag()
 	skynet.error("get bag info")
-	return { result = bag.get() }
+	return { items = bag.items, coin = bag.coin }
 end
 
 function REQUEST:moveBagItem(id, newPos)
@@ -57,14 +57,14 @@ local function isEquip(id)
 	return weapon.isWeapon(id) or armor.isArmor(id)
 end
 
-function REQUEST:useBagItem()
+function REQUEST:use_bag_item()
 	skynet.error("use", self.amount, self.id)
 	if isEquip(self.id) then
-		bag.useEquip(self.id)
+		bag.equip(self.id)
 	elseif string.find(self.id, "coin") ~= nil then
-		bag.useCoin(self.id, self.amount)
+		bag.lose_coin(self.id, self.amount)
 	else
-		bag.useItem(self.id, self.amount)
+		bag.use_item(self.id, self.amount)
 	end
 end
 
