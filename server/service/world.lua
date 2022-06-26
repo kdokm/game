@@ -25,10 +25,10 @@ local function dispatch(id)
 	return zone_id, x, y
 end
 
-function CMD.init_player(id, fd)
+function CMD.init_player(id, fd, agent)
 	local zone_id, x, y = dispatch(id)
 	amounts[zone_id] = amounts[zone_id] + 1
-	skynet.call(zones[zone_id], "lua", "init_player", id, {fd=fd, x=x, y=y})
+	skynet.call(zones[zone_id], "lua", "init_player", id, {fd=fd, agent=agent, x=x, y=y})
 	return zones[zone_id]
 end
 

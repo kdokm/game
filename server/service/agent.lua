@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local socket = require "socket"
-local weapon = require "weapon"
-local armor = require "armor"
+local equip = require "equip"
 local bag = require "bag"
 local attr = require "attr"
 
@@ -61,11 +60,11 @@ function REQUEST:move_bag_item(id, new_pos)
 end
 
 local function is_equip(id)
-	return weapon.is_weapon(id) or armor.is_armor(id)
+	return equip.is_weapon(id) or equip.is_armor(id)
 end
 
 local function get_equip_index(id)
-	if weapon.is_weapon(id) then
+	if equip.is_weapon(id) then
 		return 1
 	else
 		return armor.type[string.sub(id, 2, type_end)].index
@@ -158,7 +157,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	bag.init(client_id)
-	zone = skynet.call("world", "lua", "init_player", client_id, client_fd)
+	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self())
 end
 
 function CMD.disconnect()
@@ -166,13 +165,17 @@ function CMD.disconnect()
 	skynet.exit()
 end
 
-function CMD.acq_bag_item(id, amount)
-	skynet.error("acquire", amount, id)
-	if is_equip(self.id) then
-		bag.acq_equip(self.id, self.amount)
-	else
-		bag.acq_item(self.id, self.amount)
+function CMD.drop(level, exp, items)
+	local msgs = {}
+	for k, v in pairs(items) do
+		skynet.error("acquire", v, k)
+		if is_equip(k) then
+			table.insert(msgs, bag.acq_equip(k, v)
+		else
+			table.insert(msgs, bag.acq_item(k, v)
+		end
 	end
+	socket.send_package(client_fd, socket.send_request("drop", {level = level, exp = exp, msgs = msgs}))
 end
 
 skynet.start(function()

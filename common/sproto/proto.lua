@@ -126,7 +126,7 @@ drop 3 {
 	request {
 		level 0 : integer
 		exp 1 : integer
-		items 2 : *string
+		msgs 2 : *string
 	}
 }
 
