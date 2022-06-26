@@ -8,11 +8,10 @@ local weapon = {
 		starter = {level = 1, effect = "help"},
 		fire = {level = 10, effect = "fire"}
 	},
-	typeEnd = 2,
-	specEnd = 5
+	type_end = 6
 }
 
-function weapon.isWeapon(id)
+function weapon.is_weapon(id)
 	local i = string.sub(id, 1, 1)
 	if i == '*' then
 		return true

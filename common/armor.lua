@@ -1,18 +1,17 @@
 local armor = {
 	type = {
-		upper = {def = 10},
-		lower = {def = 5},
-		shoe = {def = 3}
+		upper = {def = 10, index = 2},
+		lower = {def = 5, index = 3},
+		shoes = {def = 3, index = 4}
 	},
 	spec = {
 		starter = {level = 1, effect = "save"},
 		bounce = {level = 10, effect = "bounce"}
 	},
-	typeEnd = 2,
-	specEnd = 5
+	type_end = 6
 }
 
-function armor.isArmor(id)
+function armor.is_armor(id)
 	local i = string.sub(id, 1, 1)
 	if i == '#' then
 		return true

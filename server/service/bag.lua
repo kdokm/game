@@ -3,96 +3,101 @@ local utils = require "utils"
 local grade = require "grade"
 local attach = require "attach"
 
-local bag = {items, coin}
+local bag = {items = {}, coin}
 local bag_size = 30
+local items_limit = 999
 local pos_end = 3
 local amount_end = 6
 local client_id
+local updates
 
-local pos = {}
-local next_pos = -1
+local grids = {}
+local total = 0
 local equip_num = 4
-local max_pos = bag_size + equipNum
+local next_pos = equip_num + 1
+local max_pos = bag_size + equip_num
 
 local function cal_next_pos()
-	local p = table.remove(pos)
-	if p > equip_num then
-		next_pos = p
+	for i = next_pos+1, #bag.items do
+		if grids[i] == nil then
+			next_pos = i
+			return
+		end
 	end
-	table.insert(pos, p)
+	next_pos = -1
 end
 
 local function empty_pos(p)
-	table.insert(pos, p, p)
-	table.sort(pos)
-	if p > next_pos then
-		next_pos = p
+	grids[p] = nil
+	if p > equip_num then
+		total = total - 1
+		if p < next_pos then
+			next_pos = p
+		end
 	end
 end
 
-local function occupy_pos(p)
-	table.remove(pos, p)
-	if p == next_pos then
-		cal_next_pos()
+local function occupy_pos(p, id)
+	grids[p] = id
+	if p > equip_num then
+		total = total + 1
+		if p == next_pos then
+			cal_next_pos()
+		end
 	end
 end
 
 function bag.init(id)
 	client_id = id
-	--local r = skynet.call("mongo")
-
-	for i=1, max_pos do
-		empty_pos(i)
-	end
-
-	for k, v in pairs(b) do
-		local p = tonumber(string.sub(v, 1, posEnd))
-		occupy_pos(p)
-		if p <= 4 then
-			table.insert(r, p, k)
+	local r = skynet.call("mongo", "lua", "getall", "B", client_id)
+	for k, v in pairs(r) do
+		if k == "coin" then
+			bag.coin = v
+		else if k ~= "_id" then
+			local pos =  tonumber(string.sub(v, 1, pos_end))
+			local amount = tonumber(string.sub(v, pos_end+1))
+			bag.items[k] = {id = k, pos = pos, amount = amount}
+			occupy_pos(pos, k)
 		end
 	end
-	cal_next_pos()
-	return r
+end
+
+local function update(id)
+	table.insert(updates, id)
+end
+
+local function exchange_items(id1, id2)
+	local temp = bag.items[id1].pos
+	bag.items[id1].pos = bag.items[id2].pos
+	bag.items[id2].pos = temp
+	grids[bag.items[id1].pos] = id1
+	grids[bag.items[id2].pos] = id2
+	table.insert(updates, id1)
+	table.insert(updates, id2)
 end
 
 function bag.move_item(id, new_pos)
-	assert(pos[new_pos] == nil, "new position is not empty!")
-	local r = skynet.call("redis", "lua", "hget", "B", client_id, id)
-	assert(r ~= nil, "nothing to move!")
-
-	local p = string.sub(r, 1, pos_end)
-	r = utils.gen_str(new_pos, 1, pos_end)..string.sub(r, pos_end+1)
-	skynet.call("redis", "lua", "hset", "B", client_id, id, r)
-	occupy_pos(new_pos)
-	empty_pos(p)
-end
-
-function bag.exchange_item(id1, id2)
-	local r1 = skynet.call("redis", "lua", "hget", "B", client_id, id1)
-	local r2 = skynet.call("redis", "lua", "hget", "B", client_id, id2)
-	local p1 = string.sub(r2, 1, pos_end)
-	local p2 = string.sub(r1, 1, pos_end)
-
-	r1 = p1..string.sub(r, pos_end+1)
-	r2 = p2..string.sub(r, pos_end+1)
-	skynet.call("redis", "lua", "hset", "B", client_id, id1, r1)
-	skynet.call("redis", "lua", "hset", "B", client_id, id2, r2)
-end
-
-function bag.use_item(id, amount)	
-	local r = skynet.call("redis", "lua", "hget", "B", client_id, id)
-	assert(r ~= nil, "nothing to use!")
-	val = tonumber(string.sub(r, pos_end+1, amount_end)) - amount
-	assert(val >= 0, "no enough item!")
-
-	if val == 0 then
-		skynet.call("redis", "lua", "hdel", "B", client_id, id)
-		empty_pos(tonumber(string.sub(r, 1, pos_end)))
+	if grids[new_pos] ~= nil then
+		exchange_items(id, grids[new_pos])
 	else
-		r = string.sub(r, 1, posEnd)..utils.gen_str(val, amount_end-pos_end)..string.sub(r, amount_end+1)
-		skynet.call("redis", "lua", "hset", "B", client_id, id, r)
+		empty_pos(bag.items[id].pos)
+		bag.items[id].pos = new_pos
+		occupy_pos(new_pos, id)
+		table.insert(updates, id)
+	end
+end
+
+function bag.use_item(id, amount)
+	local val = bag.items[id].amount - amount
+	if val < 0 then
+		return "no enough item!"
+	elseif val == 0 then
+		empty_pos(bag.items[id].pos)
+		bag.items[id] = nil
+	else
+		bag.items[id].amount = val
                 end
+	table.insert(updates, id)
 end
 
 local function new_item(id, amount)
@@ -101,21 +106,41 @@ local function new_item(id, amount)
 	skynet.call("redis", "lua", "hset", "B", client_id, id, str)
 end
 
-function bag.acq_item(id, amount)
+function bag.check_full()
 	if next_pos == -1 then
-		return false
+		return "your bag is full!"
+	else
+		local remain = bag_size - total
+		if remain < 5 then
+			return "your bag has only "..remain.." spaces left!)"
+		end
 	end
-	
-	local r = skynet.call("redis", "lua", "hget", "B", client_id, id)
-	if r == nil then
-		new_item(id, amount)
-	else 
-		val = tonumber(string.sub(r, pos_end+1, amount_end)) + amount
-		assert(val <= 999, "cannot get more item!") 
-		r = string.sub(r, 1, pos_end)..utils.gen_str(val)..string.sub(r, amount_end+1)
-		skynet.call("redis", "lua", "hset", "B", client_id, id, r)
+end
+
+function bag.acq_item(id, amount)
+	local msg
+	if bag.items[id] == nil then
+		if next_pos == -1 then
+			return
+		end
+		bag.items[id] = {id = id, pos = next_pos, amount = amount}
+		occupy_pos(next_pos, id)
+		msg = "got "..amount.." "..id.."(s)!"
+	else
+		if bag.items[id].amount == items_limit then
+			return
+		end
+		local val = bag.items[id].amount + amount
+		msg = "got "..val-bag.items[id].amount.." "..id.."(s)!"
+		if val <= items_limit then
+			bag.items[id].amount = val
+		else
+			bag.items[id].amount = items_limit
+			msg = msg.." (cannot get more than "..items_limit.." of "..id.."!)"
+		end
                 end
-	return true
+	table.insert(updates, id)
+	return msg
 end
 
 local function gen_grade()
@@ -145,27 +170,31 @@ local function gen_attach()
 end
 
 function bag.acq_equip(id, amount)
-	if next_pos == -1 then
-		return false
-	end
-
 	for i=1, amount do
+		if next_pos == -1 then
+			if i == 1 then
+				return
+			else
+				return "got "..i-1.." "..id.."(s)!"
+			end
+		end
 		local grade = gen_grade()
 		id = id..grade
 		local attach = gen_attach()
-		while (skynet.call("redis", "lua", "hget", "B", client_id, id..attach) ~= nil) do
+		while (bag.items[id..attach] ~= nil) do
 			attach = gen_attach()
 		end
 		id = id..attach
 
 		if grade == "p" or grade == "o" then
-			skynet.call("redis", "lua", "hsetInst", "B", client_id, id, utils.genStr(nextPos, posEnd))
+			--skynet.call("mongo", "lua", "set", "B", client_id, id, utils.genStr(nextPos, posEnd))
 		else
-			skynet.call("redis", "lua", "hset", "B", client_id, id, utils.genStr(nextPos, posEnd))
+			table.insert(updates, id)
 		end
-		occupy_pos(next_pos)
+		bag.items[id] = {id = id, pos = next_pos})
+		occupy_pos(next_pos, id)
 	end
-	return true
+	return "got "..amount.." "..id.."(s)!"
 end
 
 return bag

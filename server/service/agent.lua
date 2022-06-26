@@ -38,44 +38,46 @@ end
 
 function REQUEST:get_bag()
 	skynet.error("get bag info")
-	return { items = bag.items, coin = bag.coin }
+	local items = {}
+	for k, v in pairs(bag.items) do
+		table.insert(items, v)
+	end
+	local coin
+	if bag.coin ~= nil then
+		coin = bag.coin
+	else
+		coin = 0
+	end
+	return { items = items, coin = coin }
 end
 
-function REQUEST:moveBagItem(id, newPos)
-	skynet.error("move", self.id, "to", self.newPos)
-	assert(string.find(id, "coin") == nil, "cannot move coin")
-	bag.moveItem(id, newPos)
+function REQUEST:move_bag_item(id, new_pos)
+	skynet.error("move", self.id, "to", self.new_pos)
+	if bag.items[id] ~= nil then
+		local msg = bag.move_item(id, new_pos)
+		if msg ~= nil then
+		end
+	end
 end
 
-function REQUEST:exchangeBagItem(id1, id2)
-	skynet.error("exchange", self.id1, "and", self.id2)
-	assert(string.find(id1, "coin") == nil and string.find(id2, "coin") == nil, "cannot exchange coin")
-	bag.exchangeItem(id1, id2)
+local function is_equip(id)
+	return weapon.is_weapon(id) or armor.is_armor(id)
 end
 
-local function isEquip(id)
-	return weapon.isWeapon(id) or armor.isArmor(id)
+local function get_equip_index(id)
+	if weapon.is_weapon(id) then
+		return 1
+	else
+		return armor.type[string.sub(id, 2, type_end)].index
+	end
 end
 
 function REQUEST:use_bag_item()
 	skynet.error("use", self.amount, self.id)
-	if isEquip(self.id) then
-		bag.equip(self.id)
-	elseif string.find(self.id, "coin") ~= nil then
-		bag.lose_coin(self.id, self.amount)
+	if is_equip(self.id) then
+		bag.move_item(self.id, get_equip_index(self.id))
 	else
 		bag.use_item(self.id, self.amount)
-	end
-end
-
-function REQUEST:acqBagItem()
-	skynet.error("acquire", self.amount, self.id)
-	if isEquip(self.id) then
-		bag.acqEquip(self.id, self.amount)
-	elseif string.find(self.id, "coin") ~= nil then
-		bag.acqCoin(self.id, self.amount)
-	else
-		bag.acqItem(self.id, self.amount)
 	end
 end
 
@@ -155,13 +157,22 @@ function CMD.start(conf)
 	client_id = conf.id
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
-	--equips = bag.init(client_id)
+	bag.init(client_id)
 	zone = skynet.call("world", "lua", "init_player", client_id, client_fd)
 end
 
 function CMD.disconnect()
 	-- todo: do something before exit
 	skynet.exit()
+end
+
+function CMD.acq_bag_item(id, amount)
+	skynet.error("acquire", amount, id)
+	if is_equip(self.id) then
+		bag.acq_equip(self.id, self.amount)
+	else
+		bag.acq_item(self.id, self.amount)
+	end
 end
 
 skynet.start(function()

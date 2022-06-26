@@ -6,12 +6,16 @@ local CMD = {}
 
 function CMD.set(col, key, field, value)
 	skynet.error("mongo set")
-	db.col:safe_insert({_id = key, field = value})
+	local t = {_id = key}
+	t[field] = value
+	db.col:safe_insert(t)
 end
 
 function CMD.get(col, key, field)
 	skynet.error("mongo get")
-	ret = db.col:findOne({_id = key}, {field = 1})
+	local t = {_id = key}
+	t[field] = 1
+	ret = db.col:findOne(t)
 	if ret == nil then
 		return
 	end

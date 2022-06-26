@@ -12,7 +12,7 @@ skynet.start(function()
 	end
 	skynet.newservice("debug_console",8000)
 	skynet.newservice("redis")
-	--skynet.newservice("mongo")
+	skynet.newservice("mongo")
 	local watchdog = skynet.newservice("watchdog")
 	skynet.call(watchdog, "lua", "start", {
 		port = 8888,

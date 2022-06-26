@@ -16,33 +16,33 @@ proto.c2s = sprotoparser.parse [[
 	agi 4 : integer
 }
 
+.item {
+	id 0 : string
+	pos 1 : integer
+	amount 2 : integer
+}
+
 handshake 1 {
 	response {
 		msg 0  : string
 	}
 }
 
-getBag 2 {
+get_bag 2 {
 	response {
-		result 0 : *string
+		items 0 : *item(pos)
+		coin 1 : integer
 	}
 }
 
-moveBagItem 3 {
+move_bag_item 3 {
 	request {
 		id 0 : string
 		newPos 1 : integer
 	}
 }
 
-exchangeBagItem 4 {
-	request {
-		id1 0 : string
-		id2 1 : string
-	}
-}
-
-useBagItem 5 {
+use_bag_item 4 {
 	request {
 		id 0 : string
 		amount 1 : integer
