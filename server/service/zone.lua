@@ -113,7 +113,7 @@ local function drop(id)
 		= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, total * v // 2)
 		attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
 		local items = {}
-		equip.generate(entities[id].max_level, entities[id].max_amount, items)
+		equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
 		skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, detail_attrs[k].exp, items)
 	end
 end

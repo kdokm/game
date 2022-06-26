@@ -170,9 +170,12 @@ function CMD.drop(level, exp, items)
 	for k, v in pairs(items) do
 		skynet.error("acquire", v, k)
 		if is_equip(k) then
-			table.insert(msgs, bag.acq_equip(k, v)
+			local msg = bag.acq_equip(k, v)
+			if msg ~= nil then
+				table.insert(msgs, msg)
+			end
 		else
-			table.insert(msgs, bag.acq_item(k, v)
+			table.insert(msgs, bag.acq_item(k, v))
 		end
 	end
 	socket.send_package(client_fd, socket.send_request("drop", {level = level, exp = exp, msgs = msgs}))

@@ -9,7 +9,7 @@ local items_limit = 999
 local pos_end = 3
 local amount_end = 6
 local client_id
-local updates
+local updates = {}
 
 local grids = {}
 local total = 0
@@ -50,10 +50,13 @@ end
 function bag.init(id)
 	client_id = id
 	local r = skynet.call("mongo", "lua", "getall", "B", client_id)
+	if r == nil then
+		return
+	end
 	for k, v in pairs(r) do
 		if k == "coin" then
 			bag.coin = v
-		else if k ~= "_id" then
+		elseif k ~= "_id" then
 			local pos =  tonumber(string.sub(v, 1, pos_end))
 			local amount = tonumber(string.sub(v, pos_end+1))
 			bag.items[k] = {id = k, pos = pos, amount = amount}
@@ -159,12 +162,12 @@ local function gen_grade()
 end
 
 local function gen_attach()
-	local res
-	local rand = math.random() * 4
+	local res = ""
+	local rand = math.ceil(math.random() * 4)
 	for i=1, rand do
 		local rand2 = math.ceil(math.random() * #attach)
 		local rand3 = math.random() * (attach[rand2].max - attach[rand2].min)
-		res = res..string.sub(attach[rand2].attr,1,attach["attr_digit"]) + utils.genStr(rand3, attach["val_digit"])
+		res = res..string.sub(attach[rand2].attr,1,attach["attr_digit"])..utils.gen_str(rand3, attach["val_digit"])
 	end
 	return res
 end
@@ -175,13 +178,13 @@ function bag.acq_equip(id, amount)
 			if i == 1 then
 				return
 			else
-				return "got "..i-1.." "..id.."(s)!"
+				return "got "..(i-1).." "..id.."(s)!"
 			end
 		end
 		local grade = gen_grade()
 		id = id..grade
 		local attach = gen_attach()
-		while (bag.items[id..attach] ~= nil) do
+		while bag.items[id..attach] ~= nil do
 			attach = gen_attach()
 		end
 		id = id..attach
@@ -191,7 +194,7 @@ function bag.acq_equip(id, amount)
 		else
 			table.insert(updates, id)
 		end
-		bag.items[id] = {id = id, pos = next_pos})
+		bag.items[id] = {id = id, pos = next_pos}
 		occupy_pos(next_pos, id)
 	end
 	return "got "..amount.." "..id.."(s)!"
