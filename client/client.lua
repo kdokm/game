@@ -16,7 +16,8 @@ local pre = common.pre
 
 local funcs = {
 	w = world,
-	c = character
+	c = character,
+	b = bag
 }
 
 local IP = ...

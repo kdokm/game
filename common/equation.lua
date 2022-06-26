@@ -1,5 +1,4 @@
-local weapon = require "weapon"
-local armor = require "armor"
+local equip = require "equip"
 local attach = require "attach"
 
 local equation = {attr = {"vit", "wil", "str", "agi"}, detail = { "hp", "mp", "atk", "def", "spd" }}

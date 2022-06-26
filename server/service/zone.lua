@@ -3,6 +3,7 @@ local equation = require "equation"
 local attr = require "attr"
 local utils = require "utils"
 local socket = require "socket"
+local equip = require "equip"
 
 local CMD = {}
 local entities = {}
@@ -111,7 +112,9 @@ local function drop(id)
 		detail_attrs[k].level, detail_attrs[k].exp 
 		= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, total * v // 2)
 		attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
-		socket.send_package(entities[k].fd, socket.send_request("drop", detail_attrs[k]))
+		local items = {}
+		equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
+		skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, detail_attrs[k].exp, items)
 	end
 end
 

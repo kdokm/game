@@ -10,7 +10,8 @@ local entities = {}
 local target = {}
 local zone
 local monster_id
-local detail_attr = {hp = 300, mp = 100, atk = 100, def = 50, spd = 100, exp = 300}
+local detail_attr = {hp = 300, mp = 100, atk = 100, def = 50, spd = 100
+		, exp = 300, max_level = 10, max_amount = 3}
 
 local function move_dir(current, target)
 	if current > target then

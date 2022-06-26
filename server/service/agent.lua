@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local socket = require "socket"
-local weapon = require "weapon"
-local armor = require "armor"
+local equip = require "equip"
 local bag = require "bag"
 local attr = require "attr"
 
@@ -36,46 +35,48 @@ end
 function REQUEST:updateSkill()
 end
 
-function REQUEST:getBag()
+function REQUEST:get_bag()
 	skynet.error("get bag info")
-	return { result = bag.get() }
-end
-
-function REQUEST:moveBagItem(id, newPos)
-	skynet.error("move", self.id, "to", self.newPos)
-	assert(string.find(id, "coin") == nil, "cannot move coin")
-	bag.moveItem(id, newPos)
-end
-
-function REQUEST:exchangeBagItem(id1, id2)
-	skynet.error("exchange", self.id1, "and", self.id2)
-	assert(string.find(id1, "coin") == nil and string.find(id2, "coin") == nil, "cannot exchange coin")
-	bag.exchangeItem(id1, id2)
-end
-
-local function isEquip(id)
-	return weapon.isWeapon(id) or armor.isArmor(id)
-end
-
-function REQUEST:useBagItem()
-	skynet.error("use", self.amount, self.id)
-	if isEquip(self.id) then
-		bag.useEquip(self.id)
-	elseif string.find(self.id, "coin") ~= nil then
-		bag.useCoin(self.id, self.amount)
+	local items = {}
+	for k, v in pairs(bag.items) do
+		table.insert(items, v)
+	end
+	local coin
+	if bag.coin ~= nil then
+		coin = bag.coin
 	else
-		bag.useItem(self.id, self.amount)
+		coin = 0
+	end
+	return { items = items, coin = coin }
+end
+
+function REQUEST:move_bag_item(id, new_pos)
+	skynet.error("move", self.id, "to", self.new_pos)
+	if bag.items[id] ~= nil then
+		local msg = bag.move_item(id, new_pos)
+		if msg ~= nil then
+		end
 	end
 end
 
-function REQUEST:acqBagItem()
-	skynet.error("acquire", self.amount, self.id)
-	if isEquip(self.id) then
-		bag.acqEquip(self.id, self.amount)
-	elseif string.find(self.id, "coin") ~= nil then
-		bag.acqCoin(self.id, self.amount)
+local function is_equip(id)
+	return equip.is_weapon(id) or equip.is_armor(id)
+end
+
+local function get_equip_index(id)
+	if equip.is_weapon(id) then
+		return 1
 	else
-		bag.acqItem(self.id, self.amount)
+		return armor.type[string.sub(id, 2, type_end)].index
+	end
+end
+
+function REQUEST:use_bag_item()
+	skynet.error("use", self.amount, self.id)
+	if is_equip(self.id) then
+		bag.move_item(self.id, get_equip_index(self.id))
+	else
+		bag.use_item(self.id, self.amount)
 	end
 end
 
@@ -155,13 +156,29 @@ function CMD.start(conf)
 	client_id = conf.id
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
-	--equips = bag.init(client_id)
-	zone = skynet.call("world", "lua", "init_player", client_id, client_fd)
+	bag.init(client_id)
+	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self())
 end
 
 function CMD.disconnect()
 	-- todo: do something before exit
 	skynet.exit()
+end
+
+function CMD.drop(level, exp, items)
+	local msgs = {}
+	for k, v in pairs(items) do
+		skynet.error("acquire", v, k)
+		if is_equip(k) then
+			local msg = bag.acq_equip(k, v)
+			if msg ~= nil then
+				table.insert(msgs, msg)
+			end
+		else
+			table.insert(msgs, bag.acq_item(k, v))
+		end
+	end
+	socket.send_package(client_fd, socket.send_request("drop", {level = level, exp = exp, msgs = msgs}))
 end
 
 skynet.start(function()
