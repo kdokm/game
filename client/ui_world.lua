@@ -18,11 +18,21 @@ local self_id
 local init = false
 local level
 local exp
+local msgs = {"W: up, S: down, A: left, D: right"}
+local msgs_size = 3
+local first = 1
 
 local function print_options()
 	lcontrol.jump(0, 34)
 	common.print_line()
-	print(" W: up, S: down, A: left, D: right\n\n")
+	for i = 0, msgs_size - 1 do
+		local index = (first + i + msgs_size - 1) % msgs_size + 1
+		if msgs[index] ~= nil then
+			print(" "..msgs[index])
+		else
+			io.write("\n")
+		end
+	end
 	common.print_line()
 	io.write("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
 end
@@ -140,6 +150,14 @@ end
 function world.drop(args)
 	level = args.level
 	exp = args.exp
+	for i = 1, #args.msgs do
+		if #msgs < msgs_size then
+			table.insert(msgs, args.msgs[i])
+		else
+			msgs[first] = args.msgs[i]
+			first = first % msgs_size + 1
+		end
+	end
 end
 
 function world.control(id, cmd)

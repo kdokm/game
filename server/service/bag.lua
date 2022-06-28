@@ -1,10 +1,8 @@
 local skynet = require "skynet"
 local utils = require "utils"
-local grade = require "grade"
-local attach = require "attach"
+local equip = require "equip"
 
 local bag = {items = {}, coin}
-local bag_size = 30
 local items_limit = 999
 local pos_end = 3
 local amount_end = 6
@@ -15,10 +13,10 @@ local grids = {}
 local total = 0
 local equip_num = 4
 local next_pos = equip_num + 1
-local max_pos = bag_size + equip_num
+local max_pos = utils.bag_size + equip_num
 
 local function cal_next_pos()
-	for i = next_pos+1, #bag.items do
+	for i = next_pos+1, utils.bag_size do
 		if grids[i] == nil then
 			next_pos = i
 			return
@@ -113,7 +111,7 @@ function bag.check_full()
 	if next_pos == -1 then
 		return "your bag is full!"
 	else
-		local remain = bag_size - total
+		local remain = utils.bag_size - total
 		if remain < 5 then
 			return "your bag has only "..remain.." spaces left!)"
 		end
@@ -146,58 +144,32 @@ function bag.acq_item(id, amount)
 	return msg
 end
 
-local function gen_grade()
-	local rand = math.random()
-	for k, v in pairs(grade) do
-		skynet.error(k)
-		if rand < v["rate"] then
-			return string.sub(k, 1, 1)
-		else
-			skynet.error(rand)
-			skynet.error(v["rate"])
-			rand = rand - v["rate"]
-		end
-	end
-	return gen_grade()
-end
-
-local function gen_attach()
-	local res = ""
-	local rand = math.ceil(math.random() * 4)
-	for i=1, rand do
-		local rand2 = math.ceil(math.random() * #attach)
-		local rand3 = math.random() * (attach[rand2].max - attach[rand2].min)
-		res = res..string.sub(attach[rand2].attr,1,attach["attr_digit"])..utils.gen_str(rand3, attach["val_digit"])
-	end
-	return res
-end
-
 function bag.acq_equip(id, amount)
 	for i=1, amount do
 		if next_pos == -1 then
+			skynet.error("bag full")
 			if i == 1 then
 				return
 			else
-				return "got "..(i-1).." "..id.."(s)!"
+				return "got "..(i-1).." "..equip.get_name(id).."(s)!"
 			end
 		end
-		local grade = gen_grade()
-		id = id..grade
-		local attach = gen_attach()
-		while bag.items[id..attach] ~= nil do
-			attach = gen_attach()
+		local grade = equip.gen_grade()
+		local attach = equip.gen_attach()
+		while bag.items[equip.gen_id(id, grade, attach)] ~= nil do
+			attach = equip.gen_attach()
 		end
-		id = id..attach
+		id = equip.gen_id(id, grade, attach)
 
 		if grade == "p" or grade == "o" then
 			--skynet.call("mongo", "lua", "set", "B", client_id, id, utils.genStr(nextPos, posEnd))
 		else
 			table.insert(updates, id)
 		end
-		bag.items[id] = {id = id, pos = next_pos}
+		bag.items[id] = {id = id, pos = next_pos, amount = 1}
 		occupy_pos(next_pos, id)
 	end
-	return "got "..amount.." "..id.."(s)!"
+	return "got "..amount.." "..equip.get_name(id).."(s)!"
 end
 
 return bag
