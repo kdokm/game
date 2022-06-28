@@ -1,6 +1,7 @@
 local lcontrol = require "lcontrol"
 local message = require "message"
 local common = require "ui_common"
+local utils = require "utils"
 local equation = require "equation"
 
 local character = {}
@@ -35,8 +36,8 @@ local function print_attr()
 	lcontrol.jump(75, start_y - 2)
 	print("LEVEL: "..attr.level.."\n\n\n")
 	local modified_attr = {}
-	for i = 1, #equation.attr do
-		local a = equation.attr[i]
+	for i = 1, #utils.attr do
+		local a = utils.attr[i]
 		modified_attr[a] = attr[a] + add_points_attr[i]
 		print(pre..pre..string.upper(a)..": "..modified_attr[a].."\n")
 	end
@@ -45,8 +46,8 @@ local function print_attr()
 		io.write(" (unsaved)")
 	end
 	local detail = equation.cal_detail(modified_attr, {})
-	for i = 1, #equation.detail do
-		local d = equation.detail[i]
+	for i = 1, #utils.detail do
+		local d = utils.detail[i]
 		lcontrol.jump(detail_x, start_y + i * 2)
 		print(string.upper(d)..": "..detail[d].."\n")
 	end
@@ -135,7 +136,7 @@ function character.control(id, cmd)
 	if state == nil then
 		if not init then
 			message.request("get_attr")
-			for i = 1, #equation.attr do
+			for i = 1, #utils.attr do
 				table.insert(add_points_attr, 0)
 			end
 			init = true

@@ -119,6 +119,7 @@ local function drop(id)
 end
 
 function CMD.quit(id, next)
+	local next_zone
 	if entities[id].type == "player" then
 		if next == nil then 
 			store_hp(id)
@@ -126,13 +127,13 @@ function CMD.quit(id, next)
 			store_pos(id)
 		end
 		detail_attrs[id] = nil
+		next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
 	else
 		drop(id)
 		damage[id] = nil
 		injury[id] = nil
 	end
 	skynet.call(aoi, "lua", "quit", id)
-	local next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
 	entities[id] = nil
 	return next_zone
 end

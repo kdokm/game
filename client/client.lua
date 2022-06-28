@@ -10,6 +10,7 @@ local message = require "message"
 local common = require "ui_common"
 local world = require "ui_world"
 local character = require "ui_character"
+local bag = require "ui_bag"
 
 local seg = common.seg
 local pre = common.pre
@@ -49,20 +50,35 @@ function event:drop(args)
 end
 
 function event:get_attr(req, resp)
-	if resp.attr ~= nil then
-		funcs["c"].update_attr(resp.attr)
-	else
-		print("error")
-		lcontrol.write_buffer(1)
+	if status == "c" then
+		if resp.attr ~= nil then
+			funcs["c"].update_attr(resp.attr)
+		else
+			print("error")
+			lcontrol.write_buffer(1)
+		end
 	end
 end
 
 function event:set_attr(req, resp)
-	if resp.attr ~= nil then
-		funcs["c"].update_attr(resp.attr)
-	else
-		print("error")
-		lcontrol.write_buffer(1)
+	if status == "c" then
+		if resp.attr ~= nil then
+			funcs["c"].update_attr(resp.attr)
+		else
+			print("error")
+			lcontrol.write_buffer(1)
+		end
+	end
+end
+
+function event:get_bag(req, resp)
+	if status == "b" then
+		if resp.items ~= nil then
+			funcs["b"].update_items(resp.items, resp.coin)
+		else
+			print("error")
+			lcontrol.write_buffer(1)
+		end
 	end
 end
 

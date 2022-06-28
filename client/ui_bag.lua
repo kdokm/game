@@ -1,152 +1,190 @@
 local lcontrol = require "lcontrol"
 local message = require "message"
 local common = require "ui_common"
-local equation = require "equation"
+local utils = require "utils"
+local equip = require "equip"
 
-local character = {}
+local bag = {}
 local pre = common.pre
+local equip_y = 5
 local start_y = 10
-local detail_x = 90
-local arrow_x = 70
+local column_x = 85
+local arrow_x = 25
+local info_x = 40
+local price_x = 95
+local amount_x = 115
+local choose_x = 130
 local curr_offset = 1
+local curr_amount = 1
 local items
+local coin = 0
 local init = false
 
 local function print_options()
 	lcontrol.jump(0, 34)
 	common.print_line()
-
-	print(" W: previous item,   S: next item,   Space: use/equip\n\n")
+	print(" W: previous item,   S: next item,   I: increase amount,   D: decrease amount,   Space: use/equip,   C: sell for coin,   A: auction\n\n")
 	common.print_line()
-	io.write(pre..pre..pre.."Back (b)"..pre..pre.."Exit (Esc)")
+	io.write(pre..pre.."Back (b)"..pre..pre.."Exit (Esc)")
+end
+
+local function print_equip_info(info)
+	io.write("grade: "..equip.grade[info.grade].name)
+	for i = 1, #info.attach do
+		local t = info.attach[i]
+		io.write(", "..utils.get_detail_from_char(t.attr).."+"..t.val.."%")
+	end
 end
 
 local function print_items()
-	state = "attr"
-	lcontrol.jump(75, start_y - 2)
-	print("LEVEL: "..attr.level.."\n\n\n")
-	local modified_attr = {}
-	for i = 1, #equation.attr do
-		local a = equation.attr[i]
-		modified_attr[a] = attr[a] + add_points_attr[i]
-		print(pre..pre..string.upper(a)..": "..modified_attr[a].."\n")
+	lcontrol.jump(150, 2)
+	io.write("coin: "..coin)
+	lcontrol.jump(75, equip_y-1)
+	print("current equip:\n")
+	for i = 1, 2 do
+		local index = i * 2 - 1
+		if items[index] ~= nil then
+			io.write(pre..pre..equip.get_name(items[index].id).."(")
+			print_equip_info(equip.get_info(items[index].id))
+			io.write(")")
+		else
+			io.write(pre..pre.."     empty")
+		end
+		lcontrol.jump(column_x, equip_y + i)
+		index = index + 1
+		if items[index] ~= nil then
+			io.write(equip.get_name(items[index].id).."(")
+			print_equip_info(equip.get_info(items[index].id))
+			print(")")
+		else
+			print("     empty")
+		end
 	end
-	io.write(pre..pre.."free points: "..attr.free-add_points_attr.sum)
-	if add_points_attr.sum > 0 then
-		io.write(" (unsaved)")
+	io.write("\n")
+	common.print_line()
+	io.write("     name:")
+	lcontrol.jump(info_x, start_y)
+	io.write("description:")
+	lcontrol.jump(price_x, start_y)
+	io.write("unit price:")
+	lcontrol.jump(amount_x, start_y)
+	io.write("amount:")
+	lcontrol.jump(choose_x, start_y)
+	print("amount to use/trade:")
+	for i = 1, utils.bag_size do
+		local index = i + equip.equip_num
+		if items[index] ~= nil then
+			if equip.is_equip(items[index].id) then
+				io.write("     "..equip.get_name(items[index].id))
+				lcontrol.jump(info_x, start_y + i)
+				print_equip_info(equip.get_info(items[index].id))
+			else
+				io.write("     "..items[index].id)
+			end
+			--lcontrol.jump(price_x, start_y + i)
+			--io.write(get_price(items[index]))
+			lcontrol.jump(amount_x, start_y + i)
+			print(items[index].amount)
+		else
+			io.write("\n")
+		end
 	end
-	local detail = equation.cal_detail(modified_attr, {})
-	for i = 1, #equation.detail do
-		local d = equation.detail[i]
-		lcontrol.jump(detail_x, start_y + i * 2)
-		print(string.upper(d)..": "..detail[d].."\n")
-	end
-	lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+
+	lcontrol.jump(arrow_x, start_y + curr_offset)
 	io.write("<-")
+	if items[equip.equip_num+curr_offset] ~= nil then
+		lcontrol.jump(choose_x, start_y + curr_offset)
+		io.write(curr_amount)
+	end
 	print_options()
 	lcontrol.write_buffer(0)
 end
 
-function character.update_attr(a)
-	attr = a
-	attr.free = equation.cal_free_attr(attr)
-	zero_add_points(add_points_attr)
-	print_attr()
+function bag.update_items(i, c)
+	items = i
+	coin = c
+	curr_amount = 1
+	print_items()
 end
 
-local function update_add_points(c, to_update, add_points)
-	local flag = false
-	if c == "i" then
-		if to_update.free > add_points.sum then
-			add_points[curr_offset] = add_points[curr_offset] + 1
-			add_points.sum  = add_points.sum + 1
-			flag = true
-		end
-	elseif c == "d" then
-		if add_points[curr_offset] > 0 then
-			add_points[curr_offset] = add_points[curr_offset] - 1
-			add_points.sum  = add_points.sum - 1
-			flag = true
-		end
-	elseif c == "p" then
-		local a = {}
-		for i = 1, #equation[state] do
-			local k = equation[state][i]
-			a[k] = attr[k] + add_points[i]
-		end
-		message.request("set_"..state, {attr = a})
-		lcontrol.write_buffer(1)
+local function request(c, index)
+	if c == "p" then
+		message.request("use_bag_item", {id = items[index].id, amount = curr_amount})
 	end
-	return flag
+	lcontrol.write_buffer(1)
+end
+
+local function choose()
+	lcontrol.jump(arrow_x, start_y + curr_offset)
+	io.write("<-")
+	curr_amount = 1
+	if items[equip.equip_num+curr_offset] ~= nil then
+		lcontrol.jump(choose_x, start_y + curr_offset)
+		io.write(curr_amount.." ")
+	end
+	lcontrol.write_buffer(0)
 end
 
 local function print_control(c)
 	if c == "w" then
 		if curr_offset > 1 then
-			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+			lcontrol.jump(arrow_x, start_y + curr_offset)
 			io.write("  ")
+			lcontrol.jump(choose_x, start_y + curr_offset)
+			io.write("     ")
 			curr_offset = curr_offset - 1
-			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
-			io.write("<-")
-			lcontrol.write_buffer(0)
+			choose()
 		end
 	elseif c == "s" then
-		if curr_offset < #equation[state] then
-			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
+		if curr_offset < utils.bag_size then
+			lcontrol.jump(arrow_x, start_y + curr_offset)
 			io.write("  ")
+			lcontrol.jump(choose_x, start_y + curr_offset)
+			io.write("     ")
 			curr_offset = curr_offset + 1
-			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
-			io.write("<-")
-			lcontrol.write_buffer(0)
+			choose()
 		end
 	else
-		local flag
-		if state == "attr" then
-			flag = update_add_points(c, attr, add_points_attr)
-			if flag then
-				lcontrol.write_buffer(1)
-				print_attr()
+		local index = curr_offset + equip.equip_num
+		if items[index] == nil then
+			return
+		end
+		if c == "i" then
+			if items[index].amount > curr_amount then
+				curr_amount = curr_amount + 1
+				lcontrol.jump(choose_x, start_y + curr_offset)
+				io.write(curr_amount.." ")
+			end
+		elseif c == "d" then
+			if curr_amount > 0 then
+				curr_amount  = curr_amount - 1
+				lcontrol.jump(choose_x, start_y + curr_offset)
+				io.write(curr_amount.." ")
 			end
 		else
-			update_add_points(c, abilities, add_points_abilities)
-			if flag then
-			end
+			request(c, index)
 		end
 	end
 end
 
-function character.control(id, cmd)
-	if state == nil then
-		if not init then
-			message.request("get_attr")
-			for i = 1, #equation.attr do
-				table.insert(add_points_attr, 0)
-			end
-			init = true
-		elseif attr ~= nil then
-			print_attr()
-		end
+function bag.control(id, cmd)
+	if not init then
+		message.request("get_bag")
+		init = true
 	elseif string.len(cmd) > 0 then
 		local c = string.sub(cmd, 1, 1)
 		if c == "e" then
 			return c
 		elseif c == "b" then
-			state = nil
 			init = false
 			curr_offset = 1
 			lcontrol.write_buffer(1)
 			return "w"
-		elseif c == "a" then
-			if state == "attr" then
-				print_skill()
-			else
-				print_attr()
-			end
 		else
 			print_control(c)
 		end
 	end
-	return "c"
+	return "b"
 end
 
-return character
+return bag

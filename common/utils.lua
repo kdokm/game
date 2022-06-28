@@ -1,5 +1,6 @@
-local utils = {x_max = 100, y_max = 100, pos_digit = 3, 
-	    num_zones_x = 2, num_zones_y = 2, init_zones = {1, 2}}
+local utils = {bag_size = 20, x_max = 100, y_max = 100, pos_digit = 3, 
+	num_zones_x = 2, num_zones_y = 2, init_zones = {1, 2},
+	attr = {"vit", "wil", "str", "agi"}, detail = { "hp", "mp", "atk", "def", "spd" }}
 
 local size_x = utils.x_max // utils.num_zones_x
 local size_y = utils.y_max // utils.num_zones_y
@@ -109,6 +110,20 @@ function utils.get_display_id(id)
 		return res
 	else
 		return id
+	end
+end
+
+function utils.get_detail_from_char(c)
+	if c == "h" then
+		return "HP"
+	elseif c == "m" then
+		return "MP"
+	elseif c == "a" then
+		return "ATK"
+	elseif c == "d" then
+		return "DEF"
+	else
+		return "SPD"
 	end
 end
 

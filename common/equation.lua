@@ -1,7 +1,7 @@
+local utils = require "utils"
 local equip = require "equip"
-local attach = require "attach"
 
-local equation = {attr = {"vit", "wil", "str", "agi"}, detail = { "hp", "mp", "atk", "def", "spd" }}
+local equation = {}
 
 function equation.get_init_attr_val()
 	return 5
@@ -37,7 +37,7 @@ end
 
 local function cal_equips(equips)
 	local r = {}
-	for k, v in pairs(equation.detail) do
+	for k, v in pairs(utils.detail) do
 		r[v] = 0
 	end
 
