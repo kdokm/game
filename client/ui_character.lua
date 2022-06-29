@@ -88,8 +88,8 @@ local function update_add_points(c, to_update, add_points)
 		end
 	elseif c == "p" then
 		local a = {}
-		for i = 1, #equation[state] do
-			local k = equation[state][i]
+		for i = 1, #utils[state] do
+			local k = utils[state][i]
 			a[k] = attr[k] + add_points[i]
 		end
 		message.request("set_"..state, {attr = a})
@@ -109,7 +109,7 @@ local function print_control(c)
 			lcontrol.write_buffer(0)
 		end
 	elseif c == "s" then
-		if curr_offset < #equation[state] then
+		if curr_offset < #utils[state] then
 			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
 			io.write("  ")
 			curr_offset = curr_offset + 1

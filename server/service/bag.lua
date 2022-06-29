@@ -2,14 +2,13 @@ local skynet = require "skynet"
 local utils = require "utils"
 local equip = require "equip"
 
-local bag = {items = {}, coin}
+local bag = {grids = {}, items = {}, coin}
 local items_limit = 999
 local pos_end = 3
 local amount_end = 6
 local client_id
 local updates = {}
 
-local grids = {}
 local total = 0
 local equip_num = 4
 local next_pos = equip_num + 1
@@ -17,7 +16,7 @@ local max_pos = utils.bag_size + equip_num
 
 local function cal_next_pos()
 	for i = next_pos+1, utils.bag_size do
-		if grids[i] == nil then
+		if bag.grids[i] == nil then
 			next_pos = i
 			return
 		end
@@ -26,7 +25,7 @@ local function cal_next_pos()
 end
 
 local function empty_pos(p)
-	grids[p] = nil
+	bag.grids[p] = nil
 	if p > equip_num then
 		total = total - 1
 		if p < next_pos then
@@ -36,7 +35,7 @@ local function empty_pos(p)
 end
 
 local function occupy_pos(p, id)
-	grids[p] = id
+	bag.grids[p] = id
 	if p > equip_num then
 		total = total + 1
 		if p == next_pos then
@@ -71,15 +70,15 @@ local function exchange_items(id1, id2)
 	local temp = bag.items[id1].pos
 	bag.items[id1].pos = bag.items[id2].pos
 	bag.items[id2].pos = temp
-	grids[bag.items[id1].pos] = id1
-	grids[bag.items[id2].pos] = id2
+	bag.grids[bag.items[id1].pos] = id1
+	bag.grids[bag.items[id2].pos] = id2
 	table.insert(updates, id1)
 	table.insert(updates, id2)
 end
 
 function bag.move_item(id, new_pos)
-	if grids[new_pos] ~= nil then
-		exchange_items(id, grids[new_pos])
+	if bag.grids[new_pos] ~= nil then
+		exchange_items(id, bag.grids[new_pos])
 	else
 		empty_pos(bag.items[id].pos)
 		bag.items[id].pos = new_pos
@@ -159,15 +158,16 @@ function bag.acq_equip(id, amount)
 		while bag.items[equip.gen_id(id, grade, attach)] ~= nil do
 			attach = equip.gen_attach()
 		end
-		id = equip.gen_id(id, grade, attach)
+		gen_id = equip.gen_id(id, grade, attach)
+		skynet.error(gen_id)
 
 		if grade == "p" or grade == "o" then
 			--skynet.call("mongo", "lua", "set", "B", client_id, id, utils.genStr(nextPos, posEnd))
 		else
-			table.insert(updates, id)
+			table.insert(updates, gen_id)
 		end
-		bag.items[id] = {id = id, pos = next_pos, amount = 1}
-		occupy_pos(next_pos, id)
+		bag.items[gen_id] = {id = gen_id, pos = next_pos, amount = 1}
+		occupy_pos(next_pos, gen_id)
 	end
 	return "got "..amount.." "..equip.get_name(id).."(s)!"
 end

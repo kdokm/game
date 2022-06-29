@@ -3,19 +3,20 @@ local utils = require "utils"
 local equip = {weapon = {
 		type = {"sword", "staff", "spear"},
 		detail = {
-			sword = {name = "sword", atk = 50, dist = 1, spd = 20},
-			staff = {name = "staff", atk = 50, dist = 3, spd = 10},
-			spear = {name = "spear", atk = 30, dist = 1, spd = 20}
+			sword = {name = "sword", atk = 60, spd = 20, dist = 1},
+			staff = {name = "staff", atk = 60, dist = 3},
+			spear = {name = "spear", atk = 40, spd = 40, dist = 1}
 		}
 	},
 	armor = {
 		type = {"upper", "lower", "shoes"},
 		detail = {
-			upper = {name = "armor_upper", def = 10, index = 2},
-			lower = {name = "armor_lower", def = 5, index = 3},
-			shoes = {name = "armor_shoes", def = 3, index = 4}
+			upper = {name = "armor_upper", def = 30, index = 2},
+			lower = {name = "armor_lower", def = 20, index = 3},
+			shoes = {name = "armor_shoes", def = 10, spd = 10, index = 4}
 		}
 	},
+	grade_list = {"w", "g", "b", "p", "o"},
 	grade = {
 		w = {name = "white", coef = 1, rate = 0.35, exp = 10, lock = false},
 		g = {name = "green", coef = 1.2, rate = 0.3, exp = 15, lock = false},
@@ -140,10 +141,19 @@ end
 function equip.get_main(id, level, grade)
 	local main = {}
 	local type = equip.get_type(id)
+	local genre
 	if equip.is_weapon(id) then
-		table.insert(main, {attr = "atk", val = equip.weapon.detail[type].atk * level * equip.grade[grade].coef})
+		genre = "weapon"
 	else
-		table.insert(main, {attr = "def", val = equip.armor.detail[type].def * level * equip.grade[grade].coef})
+		genre = "armor"
+	end
+	for i = 1, #utils.detail do
+		local d = utils.detail[i]
+		local val = equip[genre].detail[type][d]
+		if val ~= nil then
+			val = val * level * equip.grade[grade].coef
+			table.insert(main, {attr = d, val = math.floor(val + 0.5)})
+		end
 	end
 	return main
 end

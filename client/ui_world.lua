@@ -143,19 +143,21 @@ end
 function world.update(args)
 	updates[args.time] = args
 	if curr_frame == nil then
-		curr_frame = args.time - 1
+		curr_frame = args.time - 2
 	end
 end
 
 function world.drop(args)
 	level = args.level
 	exp = args.exp
-	for i = 1, #args.msgs do
-		if #msgs < msgs_size then
-			table.insert(msgs, args.msgs[i])
-		else
-			msgs[first] = args.msgs[i]
-			first = first % msgs_size + 1
+	if args.msgs ~= nil then
+		for i = 1, #args.msgs do
+			if #msgs < msgs_size then
+				table.insert(msgs, args.msgs[i])
+			else
+				msgs[first] = args.msgs[i]
+				first = first % msgs_size + 1
+			end
 		end
 	end
 end

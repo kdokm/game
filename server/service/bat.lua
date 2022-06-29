@@ -10,7 +10,7 @@ local entities = {}
 local target = {}
 local zone
 local monster_id
-local detail_attr = {hp = 150, mp = 100, atk = 30, def = 20, spd = 50
+local detail_attr = {hp = 900, mp = 300, atk = 150, def = 75, spd = 150
 		, exp = 100, max_level = 5, max_amount = 2}
 
 local function move_dir(current, target)

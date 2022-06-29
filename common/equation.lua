@@ -4,7 +4,7 @@ local equip = require "equip"
 local equation = {}
 
 function equation.get_init_attr_val()
-	return 5
+	return 20
 end
 
 local function cal_hp(vit, wil)
@@ -26,7 +26,7 @@ function equation.get_init_mp()
 end
 
 function equation.cal_free_attr(attr)
-	local total = attr["level"] * 5 + 15
+	local total = attr["level"] * 5 + 75
 	for k, v in pairs(attr) do
 		if k ~= "level" then
 			total = total - v
@@ -44,7 +44,7 @@ local function cal_equips(equips)
 	end
 
 	for k, v in pairs(equips) do
-		local info = equip.get_id(v)
+		local info = equip.get_info(v)
 		for i = 1, #info.main do
 			local t = info.main[i]
 			main[t.attr] = main[t.attr] + t.val
@@ -60,11 +60,11 @@ end
 function equation.cal_detail(basic_attrs, equips)
 	local main, attach = cal_equips(equips)
 	detailed_attrs = {
-		hp = cal_hp(basic_attrs["vit"], basic_attrs["wil"]) * (1 + attach["hp"]/100) + main["hp"],
-		mp = cal_mp(basic_attrs["wil"]) * (1 + attach["mp"]/100) + main["mp"],
-		atk = basic_attrs["str"] * 10 * (1 + attach["atk"]/100) + main["atk"],
-		def = basic_attrs["vit"] * 5 * (1 + attach["def"]/100) + main["def"],
-		spd = basic_attrs["agi"] * 10 * (1 + attach["spd"]/100) + main["spd"],
+		hp = math.floor(cal_hp(basic_attrs["vit"], basic_attrs["wil"]) * (1 + attach["hp"]/100) + main["hp"] + 0.5),
+		mp = math.floor(cal_mp(basic_attrs["wil"]) * (1 + attach["mp"]/100) + main["mp"] + 0.5),
+		atk = math.floor(basic_attrs["str"] * 10 * (1 + attach["atk"]/100) + main["atk"] + 0.5),
+		def = math.floor(basic_attrs["vit"] * 5 * (1 + attach["def"]/100) + main["def"] + 0.5),
+		spd = math.floor(basic_attrs["agi"] * 10 * (1 + attach["spd"]/100) + main["spd"] + 0.5)
 	}
 	return detailed_attrs
 end
@@ -91,6 +91,23 @@ function equation.cal_level_exp(level, exp, gain)
 		required = equation.cal_exp_required(level)
 	end
 	return level, exp
+end
+
+function equation.cal_price(id)
+	if equip.is_equip(id) then
+		local price = 0
+		local info = equip.get_info(id)
+		for i = 1, #info.attach do
+			price = price + info.attach[i].val
+		end
+		for i = 1, #equip.grade_list do
+			if info.grade == equip.grade_list[i] then
+				return price * info.level * i * i
+			end
+		end
+	else
+		return 0
+	end
 end
 
 return equation

@@ -67,13 +67,13 @@ local function get_equip_index(id)
 	if equip.is_weapon(id) then
 		return 1
 	else
-		return armor.type[string.sub(id, 2, type_end)].index
+		return equip.armor.detail[string.sub(id, 2, equip.type_end)].index
 	end
 end
 
 local function update_equip()
-	for i = 1, #equip.equip_num do
-		equips[i] = bag.items[i]
+	for i = 1, equip.equip_num do
+		equips[i] = bag.grids[i]
 	end
 end
 
@@ -175,6 +175,7 @@ function CMD.disconnect()
 end
 
 function CMD.drop(level, exp, items)
+	skynet.error(exp)
 	local msgs = {}
 	for k, v in pairs(items) do
 		skynet.error("acquire", v, k)
