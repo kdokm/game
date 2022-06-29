@@ -11,6 +11,7 @@ local common = require "ui_common"
 local world = require "ui_world"
 local character = require "ui_character"
 local bag = require "ui_bag"
+local equip = require "equip"
 
 local seg = common.seg
 local pre = common.pre
@@ -72,13 +73,18 @@ function event:set_attr(req, resp)
 end
 
 function event:get_bag(req, resp)
-	if status == "b" then
-		if resp.items ~= nil then
+	if resp.items ~= nil then
+		if status == "b" then
 			funcs["b"].update_items(resp.items, resp.coin)
-		else
-			print("error")
-			lcontrol.write_buffer(1)
 		end
+		for i = 1, equip.equip_num do
+			if resp.items[i] ~= nil then
+				character.equips[i] = resp.items[i].id
+			end
+		end
+	else
+		print("error")
+		lcontrol.write_buffer(1)
 	end
 end
 

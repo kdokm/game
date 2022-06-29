@@ -78,7 +78,7 @@ end
 
 function CMD.init_monster(id, detail_attr)
 	entities[id] = { type="monster" }
-	entities[id].hp = 300
+	entities[id].hp = detail_attr.hp
 	entities[id].x, entities[id].y = utils.init_pos(zone_id, "random")
 	entities[id].dir = utils.get_init_dir()
 	skynet.error(entities[id].x, entities[id].y)
@@ -88,8 +88,8 @@ function CMD.init_monster(id, detail_attr)
 	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[id])
 end
 
-function CMD.update_attr(id, a)
-	local d = equation.cal_detail(a, {})
+function CMD.update_detail_attr(id, e)
+	local d = equation.cal_detail(attr.get_attr(id), e)
 	for k, v in pairs(d) do
 		detail_attrs[id][k] = v
 	end
@@ -97,8 +97,14 @@ end
 
 local function cal_portion(data, portion)
 	local sum = utils.sum(data)
-	for k, v in pairs(data) do
-		portion[k] = (portion[k] or 0) + v / sum
+	if sum ~= 0 then
+		for k, v in pairs(data) do
+			portion[k] = (portion[k] or 0) + v / sum
+		end
+	else
+		for k, v in pairs(portion) do
+			portion[k] = portion[k] + 1 / #portion
+		end
 	end
 	return portion
 end
@@ -109,12 +115,14 @@ local function drop(id)
 	cal_portion(injury[id], portion)
 	local total = detail_attrs[id].exp
 	for k, v in pairs(portion) do
-		detail_attrs[k].level, detail_attrs[k].exp 
-		= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, total * v // 2)
-		attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
-		local items = {}
-		equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
-		skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, detail_attrs[k].exp, items)
+		if entities[k] ~= nil then
+			detail_attrs[k].level, detail_attrs[k].exp 
+			= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, math.min(total * v // 2, total))
+			attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
+			local items = {}
+			equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
+			skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, detail_attrs[k].exp, items)
+		end
 	end
 end
 
@@ -126,8 +134,8 @@ function CMD.quit(id, next)
 			store_mp(id)
 			store_pos(id)
 		end
-		detail_attrs[id] = nil
 		next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
+		detail_attrs[id] = nil
 	else
 		drop(id)
 		damage[id] = nil

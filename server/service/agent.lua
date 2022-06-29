@@ -7,7 +7,7 @@ local attr = require "attr"
 local WATCHDOG
 local host
 local send_request
-local equips
+local equips = {}
 
 local CMD = {}
 local REQUEST = {}
@@ -25,7 +25,7 @@ end
 function REQUEST:set_attr()
 	attr.update_attr(client_id, self.attr)
 	local a = attr.get_attr(client_id)
-	skynet.call(zone, "lua", "update_attr", client_id, a)
+	skynet.call(zone, "lua", "update_detail_attr", client_id, equips)
 	return {attr = a}
 end
 
@@ -67,7 +67,13 @@ local function get_equip_index(id)
 	if equip.is_weapon(id) then
 		return 1
 	else
-		return armor.type[string.sub(id, 2, type_end)].index
+		return equip.armor.detail[string.sub(id, 2, equip.type_end)].index
+	end
+end
+
+local function update_equip()
+	for i = 1, equip.equip_num do
+		equips[i] = bag.grids[i]
 	end
 end
 
@@ -75,6 +81,8 @@ function REQUEST:use_bag_item()
 	skynet.error("use", self.amount, self.id)
 	if is_equip(self.id) then
 		bag.move_item(self.id, get_equip_index(self.id))
+		update_equip()
+		skynet.call(zone, "lua", "update_detail_attr", client_id, equips)
 	else
 		bag.use_item(self.id, self.amount)
 	end
@@ -157,6 +165,7 @@ function CMD.start(conf)
 	skynet.call(gate, "lua", "forward", client_fd)
 	skynet.error(client_fd)
 	bag.init(client_id)
+	update_equip()
 	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self())
 end
 
@@ -166,6 +175,7 @@ function CMD.disconnect()
 end
 
 function CMD.drop(level, exp, items)
+	skynet.error(exp)
 	local msgs = {}
 	for k, v in pairs(items) do
 		skynet.error("acquire", v, k)

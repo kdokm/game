@@ -3,19 +3,20 @@ local utils = require "utils"
 local equip = {weapon = {
 		type = {"sword", "staff", "spear"},
 		detail = {
-			sword = {name = "sword", atk = 50, dist = 1, spd = 20},
-			staff = {name = "staff", atk = 50, dist = 3, spd = 10},
-			spear = {name = "spear", atk = 30, dist = 1, spd = 20}
+			sword = {name = "sword", atk = 60, spd = 20, dist = 1},
+			staff = {name = "staff", atk = 60, dist = 3},
+			spear = {name = "spear", atk = 40, spd = 40, dist = 1}
 		}
 	},
 	armor = {
 		type = {"upper", "lower", "shoes"},
 		detail = {
-			upper = {name = "armor_upper", def = 10, index = 2},
-			lower = {name = "armor_lower", def = 5, index = 3},
-			shoes = {name = "armor_shoes", def = 3, index = 4}
+			upper = {name = "armor_upper", def = 30, index = 2},
+			lower = {name = "armor_lower", def = 20, index = 3},
+			shoes = {name = "armor_shoes", def = 10, spd = 10, index = 4}
 		}
 	},
+	grade_list = {"w", "g", "b", "p", "o"},
 	grade = {
 		w = {name = "white", coef = 1, rate = 0.35, exp = 10, lock = false},
 		g = {name = "green", coef = 1.2, rate = 0.3, exp = 15, lock = false},
@@ -104,10 +105,15 @@ end
 function equip.gen_attach()
 	local res = ""
 	local rand = math.ceil(math.random() * 4)
+	local dict = {}
 	for i=1, rand do
 		local rand2 = math.ceil(math.random() * #utils.detail)
-		local rand3 = math.ceil(math.random() * 20)
-		res = res..string.sub(utils.detail[rand2],1,1)..utils.gen_str(rand3, equip.val_digit)
+		local rand3 = math.ceil(math.random() * 10)
+		local a = string.sub(utils.detail[rand2],1,1)
+		dict[a] = (dict[a] or 0) + rand3
+	end
+	for k, v in pairs(dict) do
+		res = res..k..utils.gen_str(v, equip.val_digit)
 	end
 	return res
 end
@@ -121,25 +127,48 @@ function equip.get_type(id)
 end
 
 function equip.get_spec(id)
-	return equip.spec_detail[string.sub(id, equip.type_end+1, equip.spec_end)].name
+	return string.sub(id, equip.type_end+1, equip.spec_end)
 end
 
 function equip.get_name(id)
 	if equip.is_weapon(id) then
-		return equip.get_spec(id).."_"..equip.get_type(id)
+		return equip.spec_detail[equip.get_spec(id)].name.."_"..equip.get_type(id)
 	else
-		return equip.get_spec(id).."_armor_"..equip.get_type(id)
+		return equip.spec_detail[equip.get_spec(id)].name.."_armor_"..equip.get_type(id)
 	end
 end
 
+function equip.get_main(id, level, grade)
+	local main = {}
+	local type = equip.get_type(id)
+	local genre
+	if equip.is_weapon(id) then
+		genre = "weapon"
+	else
+		genre = "armor"
+	end
+	for i = 1, #utils.detail do
+		local d = utils.detail[i]
+		local val = equip[genre].detail[type][d]
+		if val ~= nil then
+			val = val * level * equip.grade[grade].coef
+			table.insert(main, {attr = d, val = math.floor(val + 0.5)})
+		end
+	end
+	return main
+end
+
 function equip.get_info(id)
+	local level = equip.spec_detail[equip.get_spec(id)].level
+	local grade = string.sub(id, equip.spec_end+1, equip.spec_end+1)
+	local main = equip.get_main(id, level, grade)
 	local attach = {}
 	for i = equip.spec_end+2, #id, equip.val_digit+1 do
-		local attr = string.sub(id, i, i)
+		local attr = utils.get_detail_from_char(string.sub(id, i, i))
 		local val = tonumber(string.sub(id, i+1, i+equip.val_digit))
 		table.insert(attach, {attr = attr, val = val})
 	end
-	return {grade = string.sub(id, equip.spec_end+1, equip.spec_end+1), attach = attach}
+	return {level = level, grade = grade, main = main, attach = attach}
 end
 
 return equip

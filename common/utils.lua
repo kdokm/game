@@ -5,10 +5,10 @@ local utils = {bag_size = 20, x_max = 100, y_max = 100, pos_digit = 3,
 local size_x = utils.x_max // utils.num_zones_x
 local size_y = utils.y_max // utils.num_zones_y
 local monsters = {bat = "bat", wolf = "wolf"}
-local monsters_in_zones = {{}, {bat=3}, {wolf=3}, {bat=3}}
+local monsters_in_zones = {{}, {bat=5}, {bat=5}, {wolf=3}}
 
 function utils.gen_str(num, len)
-	s = tostring(num)
+	s = tostring(math.ceil(num))
 	while(string.len(s) < len)
 	do
 		s = "0"..s
@@ -115,15 +115,15 @@ end
 
 function utils.get_detail_from_char(c)
 	if c == "h" then
-		return "HP"
+		return "hp"
 	elseif c == "m" then
-		return "MP"
+		return "mp"
 	elseif c == "a" then
-		return "ATK"
+		return "atk"
 	elseif c == "d" then
-		return "DEF"
+		return "def"
 	else
-		return "SPD"
+		return "spd"
 	end
 end
 

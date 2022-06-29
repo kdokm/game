@@ -4,7 +4,7 @@ local common = require "ui_common"
 local utils = require "utils"
 local equation = require "equation"
 
-local character = {}
+local character = {equips = {}}
 local pre = common.pre
 local state
 local start_y = 10
@@ -46,10 +46,11 @@ local function print_attr()
 		io.write(" (unsaved)")
 	end
 	local detail = equation.cal_detail(modified_attr, {})
+	local detail_eq = equation.cal_detail(modified_attr, character.equips)
 	for i = 1, #utils.detail do
 		local d = utils.detail[i]
 		lcontrol.jump(detail_x, start_y + i * 2)
-		print(string.upper(d)..": "..detail[d].."\n")
+		print(string.upper(d)..": "..detail_eq[d].."(+"..(detail_eq[d]-detail[d])..")\n")
 	end
 	lcontrol.jump(arrow_x, start_y + curr_offset * 2)
 	io.write("<-")
@@ -87,8 +88,8 @@ local function update_add_points(c, to_update, add_points)
 		end
 	elseif c == "p" then
 		local a = {}
-		for i = 1, #equation[state] do
-			local k = equation[state][i]
+		for i = 1, #utils[state] do
+			local k = utils[state][i]
 			a[k] = attr[k] + add_points[i]
 		end
 		message.request("set_"..state, {attr = a})
@@ -108,7 +109,7 @@ local function print_control(c)
 			lcontrol.write_buffer(0)
 		end
 	elseif c == "s" then
-		if curr_offset < #equation[state] then
+		if curr_offset < #utils[state] then
 			lcontrol.jump(arrow_x, start_y + curr_offset * 2)
 			io.write("  ")
 			curr_offset = curr_offset + 1
