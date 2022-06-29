@@ -104,10 +104,15 @@ end
 function equip.gen_attach()
 	local res = ""
 	local rand = math.ceil(math.random() * 4)
+	local dict = {}
 	for i=1, rand do
 		local rand2 = math.ceil(math.random() * #utils.detail)
-		local rand3 = math.ceil(math.random() * 20)
-		res = res..string.sub(utils.detail[rand2],1,1)..utils.gen_str(rand3, equip.val_digit)
+		local rand3 = math.ceil(math.random() * 10)
+		local a = string.sub(utils.detail[rand2],1,1)
+		dict[a] = (dict[a] or 0) + rand3
+	end
+	for k, v in pairs(dict) do
+		res = res..k..utils.gen_str(v, equip.val_digit)
 	end
 	return res
 end
@@ -121,25 +126,39 @@ function equip.get_type(id)
 end
 
 function equip.get_spec(id)
-	return equip.spec_detail[string.sub(id, equip.type_end+1, equip.spec_end)].name
+	return string.sub(id, equip.type_end+1, equip.spec_end)
 end
 
 function equip.get_name(id)
 	if equip.is_weapon(id) then
-		return equip.get_spec(id).."_"..equip.get_type(id)
+		return equip.spec_detail[equip.get_spec(id)].name.."_"..equip.get_type(id)
 	else
-		return equip.get_spec(id).."_armor_"..equip.get_type(id)
+		return equip.spec_detail[equip.get_spec(id)].name.."_armor_"..equip.get_type(id)
 	end
 end
 
+function equip.get_main(id, level, grade)
+	local main = {}
+	local type = equip.get_type(id)
+	if equip.is_weapon(id) then
+		table.insert(main, {attr = "atk", val = equip.weapon.detail[type].atk * level * equip.grade[grade].coef})
+	else
+		table.insert(main, {attr = "def", val = equip.armor.detail[type].def * level * equip.grade[grade].coef})
+	end
+	return main
+end
+
 function equip.get_info(id)
+	local level = equip.spec_detail[equip.get_spec(id)].level
+	local grade = string.sub(id, equip.spec_end+1, equip.spec_end+1)
+	local main = equip.get_main(id, level, grade)
 	local attach = {}
 	for i = equip.spec_end+2, #id, equip.val_digit+1 do
-		local attr = string.sub(id, i, i)
+		local attr = utils.get_detail_from_char(string.sub(id, i, i))
 		local val = tonumber(string.sub(id, i+1, i+equip.val_digit))
 		table.insert(attach, {attr = attr, val = val})
 	end
-	return {grade = string.sub(id, equip.spec_end+1, equip.spec_end+1), attach = attach}
+	return {level = level, grade = grade, main = main, attach = attach}
 end
 
 return equip

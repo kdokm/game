@@ -88,8 +88,8 @@ function CMD.init_monster(id, detail_attr)
 	skynet.call(aoi, "lua", "init", id, entities[id], monster_services[id])
 end
 
-function CMD.update_attr(id, a)
-	local d = equation.cal_detail(a, {})
+function CMD.update_detail_attr(id, e)
+	local d = equation.cal_detail(attr.get_attr(id), e)
 	for k, v in pairs(d) do
 		detail_attrs[id][k] = v
 	end

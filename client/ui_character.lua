@@ -4,7 +4,7 @@ local common = require "ui_common"
 local utils = require "utils"
 local equation = require "equation"
 
-local character = {}
+local character = {equips = {}}
 local pre = common.pre
 local state
 local start_y = 10
@@ -46,10 +46,11 @@ local function print_attr()
 		io.write(" (unsaved)")
 	end
 	local detail = equation.cal_detail(modified_attr, {})
+	local detail_eq = equation.cal_detail(modified_attr, character.equips)
 	for i = 1, #utils.detail do
 		local d = utils.detail[i]
 		lcontrol.jump(detail_x, start_y + i * 2)
-		print(string.upper(d)..": "..detail[d].."\n")
+		print(string.upper(d)..": "..detail_eq[d].."(+"..(detail_eq[d]-detail[d])..")\n")
 	end
 	lcontrol.jump(arrow_x, start_y + curr_offset * 2)
 	io.write("<-")

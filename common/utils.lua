@@ -115,15 +115,15 @@ end
 
 function utils.get_detail_from_char(c)
 	if c == "h" then
-		return "HP"
+		return "hp"
 	elseif c == "m" then
-		return "MP"
+		return "mp"
 	elseif c == "a" then
-		return "ATK"
+		return "atk"
 	elseif c == "d" then
-		return "DEF"
+		return "def"
 	else
-		return "SPD"
+		return "spd"
 	end
 end
 

@@ -36,49 +36,35 @@ function equation.cal_free_attr(attr)
 end
 
 local function cal_equips(equips)
-	local r = {}
+	local main = {}
+	local attach = {}
 	for k, v in pairs(utils.detail) do
-		r[v] = 0
+		main[v] = 0
+		attach[v] = 0
 	end
 
 	for k, v in pairs(equips) do
-		local p
-		if weapon.is_weapon(v) then
-			local type = string.sub(v, 2, weapon["type_end"])
-			local spec = string.sub(v, weapon["type_end"]+1, weapon["spec_end"])
-			local n = string.sub("atk", 1, attach["attr_digit"])
-			r[n] = r[n] + weapon["type"][type]["atk"] * weapon["spec"][spec]["level"]
-			p = weapon["spec_end"] + 1
-		else
-			local type = string.sub(v, 2, armor["type_end"])
-			local spec = string.sub(v, armor["type_end"]+1, armor["spec_end"])
-			local n = string.sub("atk", 1, attach["attr_digit"])
-			r[n] = r[n] + armor["type"][type]["atk"] * armor["spec"][spec]["level"]
-			p = armor["spec_end"] + 1
+		local info = equip.get_id(v)
+		for i = 1, #info.main do
+			local t = info.main[i]
+			main[t.attr] = main[t.attr] + t.val
 		end
-
-		local next
-		while p < string.len(v) do
-			next = p + attach["attr_digit"]
-			local attr = string.sub(v, p, next-1)
-			p = next
-			next = p+attach["val_digit"]
-			local val = string.sub(v, p, next-1)
-			p = next
-			r[attr] = r[attr] + tonumber(val)
+		for i = 1, #info.attach do
+			local t = info.attach[i]
+			attach[t.attr] = attach[t.attr] + t.val
 		end
 	end
-	return r
+	return main, attach
 end
 
 function equation.cal_detail(basic_attrs, equips)
-	local eq_attrs = cal_equips(equips)
+	local main, attach = cal_equips(equips)
 	detailed_attrs = {
-		hp = cal_hp(basic_attrs["vit"], basic_attrs["wil"]) + eq_attrs["hp"],
-		mp = cal_mp(basic_attrs["wil"]) + eq_attrs["mp"],
-		atk = basic_attrs["str"] * 10 + eq_attrs["atk"],
-		def = basic_attrs["vit"] * 5 + eq_attrs["def"],
-		spd = basic_attrs["agi"] * 10 + eq_attrs["spd"]
+		hp = cal_hp(basic_attrs["vit"], basic_attrs["wil"]) * (1 + attach["hp"]/100) + main["hp"],
+		mp = cal_mp(basic_attrs["wil"]) * (1 + attach["mp"]/100) + main["mp"],
+		atk = basic_attrs["str"] * 10 * (1 + attach["atk"]/100) + main["atk"],
+		def = basic_attrs["vit"] * 5 * (1 + attach["def"]/100) + main["def"],
+		spd = basic_attrs["agi"] * 10 * (1 + attach["spd"]/100) + main["spd"],
 	}
 	return detailed_attrs
 end

@@ -29,10 +29,14 @@ local function print_options()
 end
 
 local function print_equip_info(info)
+	io.write("level: "..info.level)
 	io.write("grade: "..equip.grade[info.grade].name)
+	for i = 1, #info.main do
+		local t = info.main[i]
+		io.write(", "..string.upper(t.attr).."+"..t.val)
 	for i = 1, #info.attach do
 		local t = info.attach[i]
-		io.write(", "..utils.get_detail_from_char(t.attr).."+"..t.val.."%")
+		io.write(", "..string.upper(t.attr).."+"..t.val.."%")
 	end
 end
 

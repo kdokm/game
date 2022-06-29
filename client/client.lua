@@ -72,13 +72,16 @@ function event:set_attr(req, resp)
 end
 
 function event:get_bag(req, resp)
-	if status == "b" then
-		if resp.items ~= nil then
+	if resp.items ~= nil then
+		if status == "b" then
 			funcs["b"].update_items(resp.items, resp.coin)
-		else
-			print("error")
-			lcontrol.write_buffer(1)
 		end
+		for i = 1, utils.equip_num do
+			character.equips[i] = resp.items[i]
+		end
+	else
+		print("error")
+		lcontrol.write_buffer(1)
 	end
 end
 
