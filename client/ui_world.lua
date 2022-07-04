@@ -34,7 +34,7 @@ local function print_options()
 		end
 	end
 	common.print_line()
-	io.write("     Character (c)"..pre..pre.."Bag (b)"..pre..pre.."Exit (Esc)")
+	io.write(pre.."Character (c)"..pre.."Bag (b)"..pre.."Friends (f)"..pre.."Exit (Esc)")
 end
 
 local function print_upper_bar(x, y, dir)
