@@ -22,6 +22,11 @@ proto.c2s = sprotoparser.parse [[
 	amount 2 : integer
 }
 
+.friend {
+	id 0 : string
+	status 1 : string
+}
+
 handshake 1 {
 	response {
 		msg 0  : string
@@ -49,33 +54,44 @@ use_bag_item 4 {
 	}
 }
 
-acqBagItem 6 {
-	request {
-		id 0 : string
-		amount 1 : integer
-	}
-}
-
-move 7 {
+move 5 {
 	request {
 		dir 0 : integer
 	}
 }
 
-attack 8 {}
+attack 6 {}
 
-get_attr 9 {
+get_attr 7 {
 	response {
 		attr 0 : attribute	
 	}
 }
 
-set_attr 10 {
+set_attr 8 {
 	request {
 		attr 0 : attribute
 	}
 	response {
 		attr 0 : attribute
+	}
+}
+
+get_friends 9 {
+	response {
+		friends 0 : *friend
+	}
+}
+
+add_friend 10 {
+	request {
+		id 0 : string
+	}
+}
+
+delete_friend 11 {
+	request {
+		id 0 : string
 	}
 }
 
@@ -127,6 +143,12 @@ drop 3 {
 		level 0 : integer
 		exp 1 : integer
 		msgs 2 : *string
+	}
+}
+
+notice 4 {
+	request {
+		id 0 : string
 	}
 }
 
