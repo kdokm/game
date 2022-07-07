@@ -73,7 +73,7 @@ end
 
 function friend.control(id, cmd)
 	if not init then
-		message.request("get_friend")
+		message.request("get_friends")
 		init = true
 	elseif friends ~= nil and string.len(cmd) > 0 then
 		local c = string.sub(cmd, 1, 1)
