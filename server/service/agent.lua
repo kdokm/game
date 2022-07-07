@@ -99,6 +99,14 @@ function REQUEST:attack()
 	skynet.call(zone, "lua", "attack", client_id)
 end
 
+function REQUEST:get_friends()
+	skynet.call("friend", "lua", "get_friends", client_id)
+end
+
+function REQUEST:add_friend()
+	skynet.call("friend", "lua", "add_friend", client_id, self.id)
+end
+
 function REQUEST:buyItem(id)
 	--skynet.call("trade", "lua", "buy", id)
 end
