@@ -66,6 +66,22 @@ function CMD.hdelInst(col, key, field)
 	--skynet.call("mongo", "lua", "del", col, key, field)
 end
 
+function CMD.zrange(col, key, min, max, withscores)
+	skynet.error("zrange")
+	return db:zrange(col..key, min, max, withscores)
+end
+
+function CMD.zall(col, key, withscores)
+	skynet.error("zall")
+	local total = db:zcard(col..key)
+	return db:zrange(col..key, 0, total, withscores)
+end
+
+function CMD.zadd(col, key, score, member)
+	skynet.error("zadd")
+	db:zadd(col..key, score, member)
+end
+
 skynet.start(function()
 	db = redis.connect {
 		host = "127.0.0.1",
