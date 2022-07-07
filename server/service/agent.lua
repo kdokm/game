@@ -107,6 +107,10 @@ function REQUEST:add_friend()
 	skynet.call("friend", "lua", "add_friend", client_id, self.id)
 end
 
+function REQUEST:delete_friend()
+	skynet.call("friend", "lua", "delete_friend", client_id, self.id)
+end
+
 function REQUEST:buyItem(id)
 	--skynet.call("trade", "lua", "buy", id)
 end

@@ -86,6 +86,11 @@ function CMD.zadd(col, key, score, member, option)
 	end
 end
 
+function CMD.zrem(col, key, member)
+	skynet.error("zrem")
+	db:zrem(col..key, member)
+end
+
 skynet.start(function()
 	db = redis.connect {
 		host = "127.0.0.1",

@@ -9,6 +9,10 @@ function CMD.add_friend(id1, id2)
 	skynet.call("redis", "lua", "zadd", "F", id1, os.time(), id2)
 end
 
+function CMD.delete_friend(id1, id2)
+	skynet.call("redis", "lua", "zrem", "F", id1, id2)
+end
+
 skynet.start(function()
 	skynet.dispatch("lua", function(_,_, command, ...)
 		skynet.trace()
