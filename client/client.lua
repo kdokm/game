@@ -11,6 +11,7 @@ local common = require "ui_common"
 local world = require "ui_world"
 local character = require "ui_character"
 local bag = require "ui_bag"
+local friend = require "ui_friend"
 local equip = require "equip"
 
 local seg = common.seg
@@ -19,7 +20,8 @@ local pre = common.pre
 local funcs = {
 	w = world,
 	c = character,
-	b = bag
+	b = bag,
+	f = friend
 }
 
 local IP = ...
@@ -120,11 +122,6 @@ end
 os.execute("cls")
 lcontrol.set_buffer()
 status = "w"
-
---message.request("getBag")
---message.request("acqBagItem", { id = "item1", amount = 3 })
---message.request("acqBagItem", { id = "weapon1", amount = 2 })
---message.request("getBag")
 
 time = lcontrol.get_time()
 while true do

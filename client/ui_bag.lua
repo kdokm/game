@@ -168,7 +168,7 @@ function bag.control(id, cmd)
 	if not init then
 		message.request("get_bag")
 		init = true
-	elseif string.len(cmd) > 0 then
+	elseif items ~= nil and string.len(cmd) > 0 then
 		local c = string.sub(cmd, 1, 1)
 		if c == "e" then
 			return c
