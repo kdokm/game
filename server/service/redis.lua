@@ -77,9 +77,13 @@ function CMD.zall(col, key, withscores)
 	return db:zrange(col..key, 0, total, withscores)
 end
 
-function CMD.zadd(col, key, score, member)
+function CMD.zadd(col, key, score, member, option)
 	skynet.error("zadd")
-	db:zadd(col..key, score, member)
+	if option ~= nil then
+		db:zadd(col..key, option, score, member)
+	else
+		db:zadd(col..key, score, member)
+	end
 end
 
 skynet.start(function()
