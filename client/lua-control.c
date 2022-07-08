@@ -20,6 +20,17 @@ ljump(lua_State *L) {
 }
 
 static int
+ljump_buf(lua_State *L) {
+	const int x = luaL_checkinteger(L, 1);
+	const int y = luaL_checkinteger(L, 2);
+	COORD pos;
+	pos.X = x;
+	pos.Y = y;
+	SetConsoleCursorPosition(hOutBuf, pos);
+	return 0;
+}
+
+static int
 lget_pressed(lua_State *L) {
 	DWORD cNum, cNumRead, fdwSaveOldMode, fdwMode, i;
 	INPUT_RECORD irInBuf[128];
@@ -184,6 +195,7 @@ luaopen_lcontrol(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "jump", ljump },
+		{ "jump_buf", ljump_buf },
 		{ "get_pressed", lget_pressed },
 		{ "get_time", lget_time },
 		{ "sleep", lsleep },

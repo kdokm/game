@@ -90,6 +90,17 @@ function event:get_bag(req, resp)
 	end
 end
 
+function event:get_friends(req, resp)
+	if resp.friends ~= nil then
+		if status == "f" then
+			funcs["f"].update_friends(resp.friends)
+		end
+	else
+		print("error")
+		lcontrol.write_buffer(1)
+	end
+end
+
 local function login()
 	lcontrol.jump(30, 12)
 	io.write("Welcome to the game! Please enter V to verify your account or enter C to create a new account: ")

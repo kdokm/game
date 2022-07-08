@@ -95,7 +95,7 @@ delete_friend 11 {
 	}
 }
 
-quit 11 {}
+quit 12 {}
 
 ]]
 

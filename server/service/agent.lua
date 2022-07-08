@@ -100,7 +100,8 @@ function REQUEST:attack()
 end
 
 function REQUEST:get_friends()
-	skynet.call("friend", "lua", "get_friends", client_id)
+	local friends = skynet.call("friend", "lua", "get_friends", client_id)
+	return {friends = friends}
 end
 
 function REQUEST:add_friend()

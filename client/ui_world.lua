@@ -34,7 +34,7 @@ local function print_options()
 		end
 	end
 	common.print_line()
-	io.write(pre.."Character (c)"..pre.."Bag (b)"..pre.."Friends (f)"..pre.."Exit (Esc)")
+	io.write("     Character (c)"..pre.."Bag (b)"..pre.."Friends (f)"..pre.."Exit (Esc)")
 end
 
 local function print_upper_bar(x, y, dir)
@@ -175,7 +175,7 @@ function world.control(id, cmd)
 		elseif curr_hp > 0 and string.len(cmd) > 0 then
 			flag = true
 			local c = string.sub(cmd, 1, 1)
-			if c == "c" or c == "b" or c == "e" then
+			if c == "c" or c == "b" or c == "f" or c == "e" then
 				init = false
 				--curr_frame = nil
 				return c
