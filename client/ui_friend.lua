@@ -29,9 +29,9 @@ local function print_friends()
 
 	for k, v in pairs(friends) do
 		lcontrol.jump(start_x, start_y + curr_offset)
-		io.write("ID:")
+		io.write(v.id)
 		lcontrol.jump(status_x, start_y + curr_offset)
-		io.write("status:")
+		io.write(v.status)
 	end
 
 	lcontrol.jump(arrow_x, start_y + curr_offset)
@@ -65,9 +65,18 @@ local function print_control(c)
 			lcontrol.write_buffer(0)
 		end
 	elseif c == "a" then
-		
+		lcontrol.jump(0, 36)
+		io.write(" Please enter the ID of player that you want to add as friend:")
+		lcontrol.write_buffer(0)
+		lcontrol.jump_buf(3, 37)
+		local id = io.read()
+		message.request("add_friend", {id = id})
+		lcontrol.write_buffer(1)
+		message.request("get_friends")
 	elseif c == "d" then
-		
+		message.request("delete_friend", {id = friends[curr_offset].id})
+		lcontrol.write_buffer(1)
+		message.request("get_friends")
 	end
 end
 
