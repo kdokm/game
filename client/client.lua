@@ -52,6 +52,12 @@ function event:drop(args)
 	funcs["w"].drop(args)
 end
 
+function event:notice(args)
+	if args.id ~= nil then
+		funcs["w"].notice(args.id)
+	end
+end
+
 function event:get_attr(req, resp)
 	if status == "c" then
 		if resp.attr ~= nil then

@@ -2,8 +2,11 @@ local skynet = require "skynet"
 
 local CMD = {}
 local SOCKET = {}
-local gate
 local agent = {}
+local id_to_fd = {}
+local fd_to_id = {}
+local msg = {}
+local gate
 local login
 
 function SOCKET.open(fd, addr)
@@ -17,6 +20,10 @@ end
 local function close_agent(fd)
 	local a = agent[fd]
 	agent[fd] = nil
+	local id = fd_to_id[fd]
+	id_to_fd[id] = nil
+	fd_to_id[fd] = nil
+
 	if a then
 		skynet.call(gate, "lua", "kick", fd)
 		-- disconnect never return
@@ -45,7 +52,11 @@ function SOCKET.data(fd, msg)
 	local r = skynet.call(login, "lua", "open", fd, string.sub(msg, 2), string.sub(msg, 1, 1))
 
 	if r ~= nil then
-		agent[fd] = r
+		agent[fd] = r.agent
+		id_to_fd[r.id] = fd
+		fd_to_id[fd] = r.id
+		local friends = skynet.call("friend", "lua", "get_mutual", r.id)
+		msg[r.id] = friends
 	end
 end
 
@@ -55,6 +66,15 @@ end
 
 function CMD.close(fd)
 	close_agent(fd)
+end
+
+local function notify(id, list)
+	for i = 1, #list do
+		local fd = id_to_fd[list[i]]
+		if fd ~= nil then	
+			socket.send_package(fd, socket.send_request("notice", {id = id})
+		end
+	end
 end
 
 skynet.start(function()
@@ -74,4 +94,14 @@ skynet.start(function()
 	gate = skynet.newservice("gate")
 	login = skynet.newservice("login")
 	skynet.call(login, "lua", "start", { gate = gate, watchdog = skynet.self() })
+
+	skynet.fork(function()
+		while true do
+			for k, v in msg do
+				notify(k, v)
+			end
+			msg = {}
+			sleep(100)
+		end
+	end)
 end)

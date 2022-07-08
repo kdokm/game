@@ -147,19 +147,28 @@ function world.update(args)
 	end
 end
 
+local function add_msg(msg)
+	if #msgs < msgs_size then
+		table.insert(msgs, msg)
+	else
+		msgs[first] = msg
+		first = first % msgs_size + 1
+	end
+end
+
 function world.drop(args)
 	level = args.level
 	exp = args.exp
 	if args.msgs ~= nil then
 		for i = 1, #args.msgs do
-			if #msgs < msgs_size then
-				table.insert(msgs, args.msgs[i])
-			else
-				msgs[first] = args.msgs[i]
-				first = first % msgs_size + 1
-			end
+			add_msg(args.msgs[i])
 		end
 	end
+end
+
+function world.notice(id)
+	local msg = "your friend "..id.." is online!"
+	add_msg(msg)
 end
 
 function world.control(id, cmd)
