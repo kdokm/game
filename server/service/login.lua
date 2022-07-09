@@ -21,21 +21,19 @@ function CMD.open(fd, msg, flag)
 	skynet.error("password: "..password)
 
 	if flag == "V" then
-		local ret = skynet.call("redis", "lua", "get", "A", id, "password")
+		local ret = skynet.call("redis", "lua", "get", "S", id, "password")
 		if ret ~= password then
 			socket.send_package(fd, "wrong password")
 			return
 		end
 	else
-		local ret = skynet.call("redis", "lua", "set", "A", id, "password", password, nx)
-		if r ~= nil then
-			socket.send_package(fd, "ok")
-		else
+		local ret = skynet.call("redis", "lua", "set", "S", id, "password", password, "nx")
+		if ret == nil then
 			socket.send_package(fd, "user ID already exists")
 			return
 		end
 	end
-
+	socket.send_package(fd, "ok")
 	local agent = skynet.newservice("agent")
 	skynet.call(agent, "lua", "start", { gate = gate, watchdog = watchdog, fd = fd, id = id })
 	return {agent = agent, id = id}

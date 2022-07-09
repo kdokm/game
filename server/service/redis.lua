@@ -16,12 +16,12 @@ function CMD.get(col, key, name)
 	return db:get(col..key)
 end
 
-function CMD.set(col, key, value, option)
+function CMD.set(col, key, name, value, option)
 	skynet.error("set")
 	if option ~= nil then
-		db:set(col..key, value, option)
+		return db:set(col..key, value, option)
 	else
-		db:set(col..key, value)
+		return db:set(col..key, value)
 	end
 end
 
@@ -54,13 +54,13 @@ end
 
 function CMD.hset(col, key, field, value)
 	skynet.error("hset")
-	db:hset(col..key, field, value)
+	return db:hset(col..key, field, value)
 	--skynet.call("mongo", "lua", "set", col, key, field, value)
 end
 
 function CMD.hdel(col, key, field)
 	skynet.error("hdel")
-	db:hdel(col..key, field)
+	return db:hdel(col..key, field)
 	--skynet.call("mongo", "lua", "del", col, key, field)
 end
 
@@ -77,15 +77,15 @@ end
 function CMD.zadd(col, key, score, member, option)
 	skynet.error("zadd", col..key, member, score)
 	if option ~= nil then
-		db:zadd(col..key, option, score, member)
+		return db:zadd(col..key, option, score, member)
 	else
-		db:zadd(col..key, score, member)
+		return db:zadd(col..key, score, member)
 	end
 end
 
 function CMD.zrem(col, key, member)
 	skynet.error("zrem")
-	db:zrem(col..key, member)
+	return db:zrem(col..key, member)
 end
 
 skynet.start(function()

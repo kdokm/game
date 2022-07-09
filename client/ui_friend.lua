@@ -27,11 +27,11 @@ local function print_friends()
 	lcontrol.jump(status_x, start_y)
 	io.write("status:")
 
-	for k, v in pairs(friends) do
-		lcontrol.jump(start_x, start_y + curr_offset)
-		io.write(v.id)
-		lcontrol.jump(status_x, start_y + curr_offset)
-		io.write(v.status)
+	for i = 1, #friends do
+		lcontrol.jump(start_x, start_y + i)
+		io.write(friends[i].id)
+		lcontrol.jump(status_x, start_y + i)
+		io.write(friends[i].status)
 	end
 
 	lcontrol.jump(arrow_x, start_y + curr_offset)

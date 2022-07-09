@@ -133,8 +133,8 @@ status = login()
 while status ~= "ok" do
 	os.execute("cls")
 	lcontrol.jump(0, 39)
-	print(status.."! Please try again!")
-	login()
+	print(" "..status.."! Please try again!")
+	status = login()
 end
 os.execute("cls")
 lcontrol.set_buffer()
