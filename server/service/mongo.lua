@@ -25,9 +25,9 @@ end
 
 function CMD.set(col, key, field, value)
 	skynet.error("mongo set")
-	local t = {_id = key}
+	local t = {}
 	t[field] = value
-	db[col]:safe_insert(t)
+	db[col]:safe_update({_id = key}, t, true)
 end
 
 function CMD.del(col, key, field)
