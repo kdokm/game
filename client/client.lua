@@ -52,6 +52,12 @@ function event:drop(args)
 	funcs["w"].drop(args)
 end
 
+function event:notice(args)
+	if args.id ~= nil then
+		funcs["w"].notice(args.id)
+	end
+end
+
 function event:get_attr(req, resp)
 	if status == "c" then
 		if resp.attr ~= nil then
@@ -127,8 +133,8 @@ status = login()
 while status ~= "ok" do
 	os.execute("cls")
 	lcontrol.jump(0, 39)
-	print(status.."! Please try again!")
-	login()
+	print(" "..status.."! Please try again!")
+	status = login()
 end
 os.execute("cls")
 lcontrol.set_buffer()

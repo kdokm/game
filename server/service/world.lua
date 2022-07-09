@@ -9,7 +9,7 @@ local amounts = {}
 local function dispatch(id)
 	local zone_id = nil
 	local x, y
-	local r = skynet.call("redis", "lua", "get", "P", id)
+	local r = skynet.call("mongo", "lua", "get", "P", id, "pos")
 	if r == nil then
 		for k, v in pairs(utils.init_zones) do
 			if zone_id == nil or amounts[v] < amounts[zone_id] then

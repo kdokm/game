@@ -4,17 +4,25 @@ require "skynet.manager"
 local CMD = {}
 local db
 
-function CMD.get(col, key)
-	--if ~db:exists(key)
-		--local r = skynet.call("mongodb", "lua", "get", self.key)
-		
-	--end
+function CMD.get(col, key, name)
+	if db:exists(col..key) == 0 then
+		local r = skynet.call("mongo", "lua", "get", col, key, name)
+		if r == nil then
+			return
+                                end
+		db:set(col..key, r)
+		return r
+	end
 	return db:get(col..key)
 end
 
-function CMD.set(col, key, value)
+function CMD.set(col, key, name, value, option)
 	skynet.error("set")
-	db:set(col..key, value)
+	if option ~= nil then
+		return db:set(col..key, value, option)
+	else
+		return db:set(col..key, value)
+	end
 end
 
 function CMD.hget(col, key, field)
@@ -46,23 +54,13 @@ end
 
 function CMD.hset(col, key, field, value)
 	skynet.error("hset")
-	db:hset(col..key, field, value)
-end
-
-function CMD.hsetInst(col, key, field, value)
-	skynet.error("hset (instant write back)")
-	db:hset(col..key, field, value)
+	return db:hset(col..key, field, value)
 	--skynet.call("mongo", "lua", "set", col, key, field, value)
 end
 
 function CMD.hdel(col, key, field)
-	sknet.error("hdel")
-	db:hdel(col..key, field)
-end
-
-function CMD.hdelInst(col, key, field)
-	skynet.error("hdel (instant write back)")
-	db:hdel(col..key, field)
+	skynet.error("hdel")
+	return db:hdel(col..key, field)
 	--skynet.call("mongo", "lua", "del", col, key, field)
 end
 
@@ -71,23 +69,23 @@ function CMD.zscore(col, key, member)
 	return db:zscore(col..key, member)
 end
 
-function CMD.zrange(col, key, min, max, withscores)
+function CMD.zrange(col, key, min, max, option)
 	skynet.error("zrange", col..key)
-	return db:zrange(col..key, min, max, withscores)
+	return db:zrange(col..key, min, max, option)
 end
 
 function CMD.zadd(col, key, score, member, option)
 	skynet.error("zadd", col..key, member, score)
 	if option ~= nil then
-		db:zadd(col..key, option, score, member)
+		return db:zadd(col..key, option, score, member)
 	else
-		db:zadd(col..key, score, member)
+		return db:zadd(col..key, score, member)
 	end
 end
 
 function CMD.zrem(col, key, member)
 	skynet.error("zrem")
-	db:zrem(col..key, member)
+	return db:zrem(col..key, member)
 end
 
 skynet.start(function()

@@ -2,6 +2,10 @@ local skynet = require "skynet"
 require "skynet.manager"
 local CMD = {}
 
+function CMD.get_mutual(id)
+	return skynet.call("redis", "lua", "zrange", "F", id, 1, 1, "byscore")
+end
+
 function CMD.get_friends(id)
 	local friends = {}
 	local res = skynet.call("redis", "lua", "zrange", "F", id, 0, 100, "withscores")

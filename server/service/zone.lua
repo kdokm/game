@@ -17,11 +17,11 @@ local aoi
 local function store_pos(id)
 	local r = utils.gen_str(entities[id].x, utils.pos_digit)
 	            ..utils.gen_str(entities[id].y, utils.pos_digit)
-	skynet.call("redis", "lua", "set", "P", id, r)
+	skynet.call("mongo", "lua", "set", "P", id, "pos", r)
 end
 
 local function init_hp(id)
-	local r = skynet.call("redis", "lua", "get", "H", id)
+	local r = skynet.call("mongo", "lua", "get", "H", id, "hp")
 	if r == nil then
 		entities[id].hp = equation.get_init_hp()
 	else
@@ -30,11 +30,11 @@ local function init_hp(id)
 end
 
 local function store_hp(id)
-	skynet.call("redis", "lua", "set", "H", id, tostring(entities[id].hp))
+	skynet.call("mongo", "lua", "set", "H", id, "hp", entities[id].hp)
 end
 
 local function init_mp(id)
-	local r = skynet.call("redis", "lua", "get", "M", id)
+	local r = skynet.call("mongo", "lua", "get", "M", id, "mp")
 	if r == nil then
 		entities[id].mp = equation.get_init_mp()
 	else
@@ -43,7 +43,7 @@ local function init_mp(id)
 end
 
 local function store_mp(id)
-	skynet.call("redis", "lua", "set", "M", id, tostring(entities[id].mp))
+	skynet.call("mongo", "lua", "set", "M", id, "mp", entities[id].mp)
 end
 
 function CMD.start(id)
