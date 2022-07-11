@@ -18,9 +18,6 @@ local function dispatch(id)
 		r = {}
 		r.x, r.y = utils.init_pos(zone_id, "center")
 	else
-		for k, v in pairs(r) do
-			skynet.error(k, v)
-		end
 		zone_id = utils.get_zone_id(r.x, r.y)
 	end
 	return zone_id, r

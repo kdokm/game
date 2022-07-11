@@ -24,7 +24,7 @@ function bag.store_update()
 		list[id] = s
 	end
 	updates = {}
-	skynet.send("mongo", "lua", "set", "B", client_id, list)
+	skynet.call("mongo", "lua", "set", "B", client_id, list)
 end
 
 local function cal_next_pos()

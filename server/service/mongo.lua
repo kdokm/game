@@ -26,7 +26,7 @@ function CMD.set(col, key, list)
 	skynet.error("mongo set")
 	local op = {}
 	op["$set"] = list
-	db[col]:safe_update({_id = key}, op, true)
+	return db[col]:safe_update({_id = key}, op, true)
 end
 
 function CMD.del(col, key, field)
