@@ -14,6 +14,21 @@ local equip_num = 4
 local next_pos = equip_num + 1
 local max_pos = utils.bag_size + equip_num
 
+function bag.store_update()
+	local list = {}
+	for i = 1, #updates do
+		local id = updates[i]
+		local item = bag.items[id]
+		local s = utils.gen_str(item.pos, pos_end)
+			..utils.gen_str(item.amount, amount_end - pos_end)
+		list[id] = s
+	end
+	updates = {}
+	if next(list) ~= nil then
+		skynet.call("mongo", "lua", "set", "B", client_id, list)
+	end
+end
+
 local function cal_next_pos()
 	for i = next_pos+1, utils.bag_size do
 		if bag.grids[i] == nil then
@@ -161,13 +176,12 @@ function bag.acq_equip(id, amount)
 		gen_id = equip.gen_id(id, grade, attach)
 		skynet.error(gen_id)
 
-		if grade == "p" or grade == "o" then
-			--skynet.call("mongo", "lua", "set", "B", client_id, id, utils.genStr(nextPos, posEnd))
-		else
-			table.insert(updates, gen_id)
-		end
 		bag.items[gen_id] = {id = gen_id, pos = next_pos, amount = 1}
 		occupy_pos(next_pos, gen_id)
+		table.insert(updates, gen_id)
+		if grade == "p" or grade == "o" then
+			bag.store_update()
+		end
 	end
 	return "got "..amount.." "..equip.get_name(id).."(s)!"
 end

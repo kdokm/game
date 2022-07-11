@@ -18,18 +18,16 @@ local function dispatch(id)
 		r = {}
 		r.x, r.y = utils.init_pos(zone_id, "center")
 	else
-		for k, v in pairs(r) do
-			skynet.error(k, v)
-		end
 		zone_id = utils.get_zone_id(r.x, r.y)
 	end
 	return zone_id, r
 end
 
-function CMD.init_player(id, fd, agent)
+function CMD.init_player(id, fd, agent, equips)
 	local zone_id, r = dispatch(id)
 	r.fd = fd
 	r.agent = agent
+	r.equips = equips
 	amounts[zone_id] = amounts[zone_id] + 1
 	skynet.call(zones[zone_id], "lua", "init_player", id, r)
 	return zones[zone_id]

@@ -1,5 +1,5 @@
-local utils = {bag_size = 20, x_max = 100, y_max = 100, pos_digit = 3, 
-	num_zones_x = 2, num_zones_y = 2, init_zones = {1, 2},
+local utils = {bag_size = 20, x_max = 100, y_max = 100, 
+	num_zones_x = 2, num_zones_y = 2, init_zones = {1, 2}, 
 	attr = {"vit", "wil", "str", "agi"}, detail = { "hp", "mp", "atk", "def", "spd" }}
 
 local size_x = utils.x_max // utils.num_zones_x
