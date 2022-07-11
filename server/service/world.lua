@@ -8,27 +8,30 @@ local amounts = {}
 
 local function dispatch(id)
 	local zone_id = nil
-	local x, y
-	local r = skynet.call("mongo", "lua", "get", "P", id, "pos")
+	local r = skynet.call("mongo", "lua", "getall", "S", id)
 	if r == nil then
 		for k, v in pairs(utils.init_zones) do
 			if zone_id == nil or amounts[v] < amounts[zone_id] then
 				zone_id = v
 			end
 		end
-		x, y = utils.init_pos(zone_id, "center")
+		r = {}
+		r.x, r.y = utils.init_pos(zone_id, "center")
 	else
-		x = tonumber(string.sub(r, 1, utils.pos_digit))
-                                y = tonumber(string.sub(r, utils.pos_digit+1))
-		zone_id = utils.get_zone_id(x, y)
+		for k, v in pairs(r) do
+			skynet.error(k, v)
+		end
+		zone_id = utils.get_zone_id(r.x, r.y)
 	end
-	return zone_id, x, y
+	return zone_id, r
 end
 
 function CMD.init_player(id, fd, agent)
-	local zone_id, x, y = dispatch(id)
+	local zone_id, r = dispatch(id)
+	r.fd = fd
+	r.agent = agent
 	amounts[zone_id] = amounts[zone_id] + 1
-	skynet.call(zones[zone_id], "lua", "init_player", id, {fd=fd, agent=agent, x=x, y=y})
+	skynet.call(zones[zone_id], "lua", "init_player", id, r)
 	return zones[zone_id]
 end
 

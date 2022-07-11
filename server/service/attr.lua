@@ -6,14 +6,16 @@ local attr = {}
 
 local function init_attr(id)
 	local a = {}
+	local t = {}
 	a.level = 1
-	a.exp = 0
-	skynet.call("redis", "lua", "hset", "A", id, "level", 1)
-	skynet.call("redis", "lua", "hset", "A", id, "exp", 0)
+	table.insert(t, "level")
+	table.insert(t, 1)
 	for k, v in pairs(utils.attr) do
 		a[v] = equation.get_init_attr_val()
-		skynet.call("redis", "lua", "hset", "A", id, v, a[v])
+		table.insert(t, v)
+		table.insert(t, a[v])
 	end
+	skynet.call("redis", "lua", "hset", "A", id, t)
 	return a
 end
 
@@ -32,9 +34,12 @@ function attr.get_attr(id)
 end
 
 function attr.update_attr(id, a)
+	local t = {}
 	for k, v in pairs(a) do
-		skynet.call("redis", "lua", "hset", "A", id, k, v)
+		table.insert(t, k)
+		table.insert(t, v)
 	end
+	skynet.call("redis", "lua", "hset", "A", id, t)
 end
 
 function attr.get_skill(id)

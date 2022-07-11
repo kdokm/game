@@ -6,8 +6,7 @@ local CMD = {}
 
 function CMD.get(col, key, field)
 	skynet.error("mongo get")
-	local t = {_id = key}
-	ret = db[col]:findOne(t)
+	ret = db[col]:findOne({_id = key})
 	if ret == nil then
 		return
 	end
@@ -16,18 +15,18 @@ end
 
 function CMD.getall(col, key)
 	skynet.error("mongo getall")
-	ret = db[col]:findOne({_id = key}, {})
+	ret = db[col]:findOne({_id = key})
 	if ret == nil then
 		return
 	end
 	return ret
 end
 
-function CMD.set(col, key, field, value)
+function CMD.set(col, key, list)
 	skynet.error("mongo set")
-	local t = {_id = key}
-	t[field] = value
-	db[col]:safe_insert(t)
+	local op = {}
+	op["$set"] = list
+	db[col]:safe_update({_id = key}, op, true)
 end
 
 function CMD.del(col, key, field)
