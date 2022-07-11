@@ -9,41 +9,26 @@ local CMD = {}
 local entities = {}
 local monster_services = {}
 local detail_attrs = {}
+local status = {}
 local damage = {}
 local injury = {}
 local zone_id
 local aoi
 
-local function store_pos(id)
-	local r = utils.gen_str(entities[id].x, utils.pos_digit)
-	            ..utils.gen_str(entities[id].y, utils.pos_digit)
-	skynet.call("mongo", "lua", "set", "P", id, "pos", r)
+local function init_status(id)
+	entities[id].hp = equation.get_init_hp()
+	entities[id].mp = equation.get_init_mp()
+	entities[id].dir = utils.get_init_dir()
+	entities[id].exp = 0
 end
 
-local function init_hp(id)
-	local r = skynet.call("mongo", "lua", "get", "H", id, "hp")
-	if r == nil then
-		entities[id].hp = equation.get_init_hp()
-	else
-		entities[id].hp = tonumber(r)
-	end
-end
-
-local function store_hp(id)
-	skynet.call("mongo", "lua", "set", "H", id, "hp", entities[id].hp)
-end
-
-local function init_mp(id)
-	local r = skynet.call("mongo", "lua", "get", "M", id, "mp")
-	if r == nil then
-		entities[id].mp = equation.get_init_mp()
-	else
-		entities[id].mp = tonumber(r)
-	end
-end
-
-local function store_mp(id)
-	skynet.call("mongo", "lua", "set", "M", id, "mp", entities[id].mp)
+local function store_status(id)
+	skynet.call("mongo", "lua", "set", "S", id, "hp", entities[id].hp)
+	skynet.call("mongo", "lua", "set", "S", id, "mp", entities[id].mp)
+	skynet.call("mongo", "lua", "set", "S", id, "x", entities[id].x)
+	skynet.call("mongo", "lua", "set", "S", id, "y", entities[id].y)
+	skynet.call("mongo", "lua", "set", "S", id, "dir", entities[id].dir)
+	skynet.call("mongo", "lua", "set", "S", id, "exp", entities[id].exp)
 end
 
 function CMD.start(id)
@@ -61,19 +46,19 @@ end
 function CMD.init_player(id, info, detail_attr)
 	entities[id] = info
 	entities[id].type = "player"
-	if detail_attr == nil then
-		entities[id].dir = utils.get_init_dir()
-		init_hp(id)
-		init_mp(id)
+	if entities[id].exp == nil then
+		init_status(id)
+	end
+	if s == nil then
 		local a = attr.get_attr(id)
 		detail_attrs[id] = equation.cal_detail(a, {})
 		detail_attrs[id].level = a.level
-		detail_attrs[id].exp = a.exp
 	else
 		detail_attrs[id] = detail_attr
 	end
 	skynet.call(aoi, "lua", "init", id, entities[id])
-	socket.send_package(entities[id].fd, socket.send_request("drop", detail_attrs[id]))
+	local content = {level = detail_attrs[id].level, exp = entities[id].exp}
+	socket.send_package(entities[id].fd, socket.send_request("drop", content))
 end
 
 function CMD.init_monster(id, detail_attr)
@@ -116,12 +101,16 @@ local function drop(id)
 	local total = detail_attrs[id].exp
 	for k, v in pairs(portion) do
 		if entities[k] ~= nil then
-			detail_attrs[k].level, detail_attrs[k].exp 
-			= equation.cal_level_exp(detail_attrs[k].level, detail_attrs[k].exp, math.min(total * v // 2, total))
-			attr.update_attr(k, {level = detail_attrs[k].level, exp = detail_attrs[k].exp})
+			local level
+			local gain = math.min(total * v // 2, total)
+			level, entities[k].exp = equation.cal_level_exp(detail_attrs[k].level, entities[k].exp, gain)
+			if level ~= detail_attrs[k].level then
+				attr.update_attr(k, {level = level})
+				detail_attrs[k].level = level
+			end
 			local items = {}
 			equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
-			skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, detail_attrs[k].exp, items)
+			skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, entities[k].exp, items)
 		end
 	end
 end
@@ -130,9 +119,7 @@ function CMD.quit(id, next)
 	local next_zone
 	if entities[id].type == "player" then
 		if next == nil then 
-			store_hp(id)
-			store_mp(id)
-			store_pos(id)
+			store_status(id)
 		end
 		next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
 		detail_attrs[id] = nil
