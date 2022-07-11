@@ -31,13 +31,13 @@ local function push(id)
 	res.updates = r
 	res.time = time
 
+	updates[id] = {}
+	entities[id].ranges = {}
 	if entities[id].type == "player" then
 		socket.send_package(entities[id].fd, socket.send_request("push", res))
 	else
 		skynet.call(services[id], "lua", "react", res)
 	end
-	updates[id] = {}
-	entities[id].ranges = {}
 end
 
 local function get_grid_index(x, y)

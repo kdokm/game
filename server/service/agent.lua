@@ -125,8 +125,9 @@ end
 
 function REQUEST:quit()
 	skynet.error("agent quit")
-	skynet.call(zone, "lua", "quit", client_id)
-	skynet.call(WATCHDOG, "lua", "close", client_fd)
+	bag.store_update()
+	skynet.send(zone, "lua", "quit", client_id)
+	skynet.send(WATCHDOG, "lua", "close", client_fd)
 end
 
 local function request(name, args, response)

@@ -104,6 +104,7 @@ local function drop(id)
 			if level ~= detail_attrs[k].level then
 				attr.update_attr(k, {level = level})
 				detail_attrs[k].level = level
+				skynet.call("mongo", "lua", "set", "S", k, {exp = entities[k].exp})
 			end
 			local items = {}
 			equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
