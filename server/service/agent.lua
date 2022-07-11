@@ -178,7 +178,7 @@ function CMD.start(conf)
 	skynet.error(client_fd)
 	bag.init(client_id)
 	update_equip()
-	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self())
+	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self(), equips)
 end
 
 function CMD.disconnect()
@@ -209,5 +209,12 @@ skynet.start(function()
 		skynet.trace()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
+	end)
+
+	skynet.fork(function()
+		while true do
+			skynet.sleep(18000)
+			bag.store_update()
+		end
 	end)
 end)

@@ -48,7 +48,7 @@ function CMD.init_player(id, info, detail_attr)
 	end
 	if s == nil then
 		local a = attr.get_attr(id)
-		detail_attrs[id] = equation.cal_detail(a, {})
+		detail_attrs[id] = equation.cal_detail(a, entities[id].equips)
 		detail_attrs[id].level = a.level
 	else
 		detail_attrs[id] = detail_attr
@@ -71,6 +71,7 @@ function CMD.init_monster(id, detail_attr)
 end
 
 function CMD.update_detail_attr(id, e)
+	entities[id].equips = e
 	local d = equation.cal_detail(attr.get_attr(id), e)
 	for k, v in pairs(d) do
 		detail_attrs[id][k] = v
