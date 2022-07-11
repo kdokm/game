@@ -23,12 +23,9 @@ local function init_status(id)
 end
 
 local function store_status(id)
-	skynet.call("mongo", "lua", "set", "S", id, "hp", entities[id].hp)
-	skynet.call("mongo", "lua", "set", "S", id, "mp", entities[id].mp)
-	skynet.call("mongo", "lua", "set", "S", id, "x", entities[id].x)
-	skynet.call("mongo", "lua", "set", "S", id, "y", entities[id].y)
-	skynet.call("mongo", "lua", "set", "S", id, "dir", entities[id].dir)
-	skynet.call("mongo", "lua", "set", "S", id, "exp", entities[id].exp)
+	local list = {hp = entities[id].hp, mp = entities[id].mp, exp = entities[id].exp, 
+		   x = entities[id].x, y = entities[id].y, dir = entities[id].dir}
+	skynet.call("mongo", "lua", "set", "S", id, list)
 end
 
 function CMD.start(id)

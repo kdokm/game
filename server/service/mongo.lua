@@ -22,12 +22,10 @@ function CMD.getall(col, key)
 	return ret
 end
 
-function CMD.set(col, key, field, value)
+function CMD.set(col, key, list)
 	skynet.error("mongo set")
-	local t = {}
-	t[field] = value
 	local op = {}
-	op["$set"] = t
+	op["$set"] = list
 	db[col]:safe_update({_id = key}, op, true)
 end
 

@@ -52,10 +52,10 @@ function CMD.hgetall(col, key)
 	return db:hgetall(col..key)
 end
 
-function CMD.hset(col, key, field, value)
+function CMD.hset(col, key, list)
 	skynet.error("hset")
-	return db:hset(col..key, field, value)
-	--skynet.call("mongo", "lua", "set", col, key, field, value)
+	return db:hset(col..key, table.unpack(list))
+	--skynet.call("mongo", "lua", "set", col, key, list)
 end
 
 function CMD.hdel(col, key, field)
