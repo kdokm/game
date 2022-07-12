@@ -1,12 +1,8 @@
 local skynet = require "skynet"
-local socket = require "socket"
 
 local CMD = {}
 local SOCKET = {}
 local agent = {}
-local id_to_fd = {}
-local fd_to_id = {}
-local msgs = {}
 local gate
 local login
 
@@ -22,9 +18,6 @@ local function close_agent(fd)
 	local a = agent[fd]
 	if a then
 		agent[fd] = nil
-		local id = fd_to_id[fd]
-		id_to_fd[id] = nil
-		fd_to_id[fd] = nil
 		skynet.call(gate, "lua", "kick", fd)
 		-- disconnect never return
 		skynet.send(a, "lua", "disconnect")
@@ -53,10 +46,6 @@ function SOCKET.data(fd, msg)
 
 	if r ~= nil then
 		agent[fd] = r.agent
-		id_to_fd[r.id] = fd
-		fd_to_id[fd] = r.id
-		local friends = skynet.call("friend", "lua", "get_mutual", r.id)
-		msgs[r.id] = friends
 	end
 end
 
@@ -66,15 +55,6 @@ end
 
 function CMD.close(fd)
 	close_agent(fd)
-end
-
-local function notify(id, list)
-	for i = 1, #list do
-		local fd = id_to_fd[list[i]]
-		if fd ~= nil then	
-			socket.send_package(fd, socket.send_request("notice", {id = id}))
-		end
-	end
 end
 
 skynet.start(function()
@@ -94,14 +74,4 @@ skynet.start(function()
 	gate = skynet.newservice("gate")
 	login = skynet.newservice("login")
 	skynet.call(login, "lua", "start", { gate = gate, watchdog = skynet.self() })
-
-	skynet.fork(function()
-		while true do
-			for k, v in pairs(msgs) do
-				notify(k, v)
-			end
-			msgs = {}
-			skynet.sleep(100)
-		end
-	end)
 end)
