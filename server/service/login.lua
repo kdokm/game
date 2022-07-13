@@ -1,16 +1,9 @@
 local skynet = require "skynet"
-local socket = require "socket"
+require "skynet.manager"
 
 local CMD = {}
-local gate
-local watchdog
 
-function CMD.start(conf)
-	gate = conf.gate
-	watchdog = conf.watchdog
-end
-
-function CMD.open(fd, msg, flag)
+function CMD.open(msg, flag)
 	local i, j = string.find(msg, "\n")
 	if i == nil or i == 1 or i == string.len(msg) then
 		return
@@ -23,20 +16,15 @@ function CMD.open(fd, msg, flag)
 	if flag == "V" then
 		local ret = skynet.call("redis", "lua", "get", "S", id, "password")
 		if ret ~= password then
-			socket.send_package(fd, "wrong password")
-			return
+			return "wrong password"
 		end
 	else
 		local ret = skynet.call("redis", "lua", "set", "S", id, "password", password, "nx")
 		if ret == nil then
-			socket.send_package(fd, "user ID already exists")
-			return
+			return "user ID already exists"
 		end
 	end
-	socket.send_package(fd, "ok")
-	local agent = skynet.newservice("agent")
-	skynet.call(agent, "lua", "start", { gate = gate, watchdog = watchdog, fd = fd, id = id })
-	return {agent = agent, id = id}
+	return "ok", id
 end
 
 skynet.start(function()
@@ -44,4 +32,5 @@ skynet.start(function()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
 	end)
+	skynet.register ".login"
 end)

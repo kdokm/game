@@ -43,5 +43,5 @@ skynet.start(function()
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
 	end)
-	skynet.register "friend"
+	skynet.register ".friend"
 end)

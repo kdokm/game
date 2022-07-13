@@ -1,8 +1,9 @@
 local skynet = require "skynet"
+require "skynet.manager"
 local utils = require "utils"
 local equation = require "equation"
 
-local attr = {}
+local CMD = {}
 
 local function init_attr(id)
 	local a = {}
@@ -19,7 +20,7 @@ local function init_attr(id)
 	return a
 end
 
-function attr.get_attr(id)
+function CMD.get_attr(id)
 	skynet.error("get attr info")
 	local r = skynet.call("redis", "lua", "hgetall", "A", id)
 	local a = {}
@@ -33,19 +34,27 @@ function attr.get_attr(id)
 	return a
 end
 
-function attr.update_attr(id, a)
+function CMD.update_attr(id, a)
 	local t = {}
 	for k, v in pairs(a) do
 		table.insert(t, k)
 		table.insert(t, v)
 	end
 	skynet.call("redis", "lua", "hset", "A", id, t)
+	return CMD.get_attr(id)
 end
 
-function attr.get_skill(id)
+function CMD.get_skill(id)
 end
 
-function attr.update_skill(id)
+function CMD.update_skill(id)
 end
 
-return attr
+skynet.start(function()
+	skynet.dispatch("lua", function(_,_, command, ...)
+		skynet.trace()
+		local f = CMD[command]
+		skynet.ret(skynet.pack(f(...)))
+	end)
+	skynet.register ".attr"
+end)
