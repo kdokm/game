@@ -90,7 +90,7 @@ end
 function REQUEST:move()
 	local next = cluster.call("zone", ".zone"..zone_id, "move", client_id, self.dir)
 	if next ~= nil then
-		zone = next
+		zone_id = next
 	end
 end
 

@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+local cluster = require "skynet.cluster"
 local redis = require "skynet.db.redis"
 require "skynet.manager"
 local CMD = {}
@@ -6,7 +7,7 @@ local db
 
 function CMD.get(col, key, name)
 	if db:exists(col..key) == 0 then
-		local r = skynet.call("mongo", "lua", "get", col, key, name)
+		local r = cluster.call("db", ".mongo", "get", col, key, name)
 		if r == nil then
 			return
                                 end
@@ -28,7 +29,7 @@ end
 function CMD.hget(col, key, field)
 	skynet.error("hget")
 	if db:hexists(col..key, field) == 0 then
-		local r = skynet.call("mongo", "lua", "get", col, key, field)
+		local r = cluster.call("db", ".mongo", "get", col, key, field)
 		skynet.error(r)
 		if r == nil then
 			return
@@ -42,7 +43,7 @@ end
 function CMD.hgetall(col, key)
 	skynet.error("hgetall")
 	if db:exists(col..key) == 0 then
-		local r = skynet.call("mongo", "lua", "getall", col, key)
+		local r = cluster.call("db", ".mongo", "lua", "getall", col, key)
 		if r == nil then
 			return
                                 end
