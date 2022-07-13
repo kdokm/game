@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+local cluster = require "skynet.cluster"
 local utils = require "utils"
 local equip = require "equip"
 
@@ -25,7 +26,7 @@ function bag.store_update()
 	end
 	updates = {}
 	if next(list) ~= nil then
-		skynet.call("mongo", "lua", "set", "B", client_id, list)
+		cluster.call("db", ".mongo", "set", "B", client_id, list)
 	end
 end
 
@@ -61,7 +62,7 @@ end
 
 function bag.init(id)
 	client_id = id
-	local r = skynet.call("mongo", "lua", "getall", "B", client_id)
+	local r = cluster.call("db", ".mongo", "getall", "B", client_id)
 	if r == nil then
 		return
 	end
@@ -116,9 +117,8 @@ function bag.use_item(id, amount)
 end
 
 local function new_item(id, amount)
-                skynet.error("create new bag item")
-	local str = utils.gen_str(next_pos, pos_end)..utils.gen_str(amount, amount_end-pos_end)
-	skynet.call("redis", "lua", "hset", "B", client_id, id, str)
+                --skynet.error("create new bag item")
+	--local str = utils.gen_str(next_pos, pos_end)..utils.gen_str(amount, amount_end-pos_end)
 end
 
 function bag.check_full()

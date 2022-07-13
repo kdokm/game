@@ -47,5 +47,5 @@ skynet.start(function()
 		assert(f)
 		skynet.ret(skynet.pack(f(...)))
 	end)
-	skynet.register "mongo"
+	skynet.register ".mongo"
 end)

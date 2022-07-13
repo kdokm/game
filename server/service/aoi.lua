@@ -1,7 +1,6 @@
 local skynet = require "skynet"
-require "skynet.manager"
+local cluster = require "skynet.cluster"
 local utils = require "utils"
-local socket = require "socket"
 local equation = require "equation"
 
 local CMD = {}
@@ -34,7 +33,7 @@ local function push(id)
 	updates[id] = {}
 	entities[id].ranges = {}
 	if entities[id].type == "player" then
-		socket.send_package(entities[id].fd, socket.send_request("push", res))
+		cluster.call("conn", entities[id].agent, "push", res)
 	else
 		skynet.call(services[id], "lua", "react", res)
 	end

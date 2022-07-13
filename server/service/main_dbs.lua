@@ -11,7 +11,6 @@ skynet.start(function()
 		local console = skynet.newservice("console")
 	end
 	skynet.newservice("debug_console",8004)
-	skynet.newservice("redis")
 	skynet.newservice("mongo")
 	cluster.open("db")
 	skynet.exit()

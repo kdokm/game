@@ -1,8 +1,8 @@
 local skynet = require "skynet"
+local cluster = require "skynet.cluster"
 local socket = require "socket"
 local equip = require "equip"
 local bag = require "bag"
-local attr = require "attr"
 
 local WATCHDOG
 local host
@@ -14,18 +14,17 @@ local REQUEST = {}
 
 local client_fd
 local client_id
-local zone
+local zone_id
 
 function REQUEST:get_attr()
-	local r = attr.get_attr(client_id)
+	local r = cluster.call("global", ".attr", "get_attr", client_id)
 	skynet.error(r.str)
 	return {attr = r}
 end
 
 function REQUEST:set_attr()
-	attr.update_attr(client_id, self.attr)
-	local a = attr.get_attr(client_id)
-	skynet.call(zone, "lua", "update_detail_attr", client_id, equips)
+	local a = cluster.call("global", ".attr", "update_attr", client_id, self.attr)
+	cluster.call("zone", ".zone"..zone_id, "update_detail_attr", client_id, equips)
 	return {attr = a}
 end
 
@@ -82,34 +81,34 @@ function REQUEST:use_bag_item()
 	if is_equip(self.id) then
 		bag.move_item(self.id, get_equip_index(self.id))
 		update_equip()
-		skynet.call(zone, "lua", "update_detail_attr", client_id, equips)
+		cluster.call("zone", ".zone"..zone_id, "update_detail_attr", client_id, equips)
 	else
 		bag.use_item(self.id, self.amount)
 	end
 end
 
 function REQUEST:move()
-	local next = skynet.call(zone, "lua", "move", client_id, self.dir)
+	local next = cluster.call("zone", ".zone"..zone_id, "move", client_id, self.dir)
 	if next ~= nil then
 		zone = next
 	end
 end
 
 function REQUEST:attack()
-	skynet.call(zone, "lua", "attack", client_id)
+	cluster.call("zone", ".zone"..zone_id, "attack", client_id)
 end
 
 function REQUEST:get_friends()
-	local friends = skynet.call("friend", "lua", "get_friends", client_id)
+	local friends = cluster.call("global", ".friend", "get_friends", client_id)
 	return {friends = friends}
 end
 
 function REQUEST:add_friend()
-	skynet.call("friend", "lua", "add_friend", client_id, self.id)
+	cluster.call("global", ".friend", "add_friend", client_id, self.id)
 end
 
 function REQUEST:delete_friend()
-	skynet.call("friend", "lua", "delete_friend", client_id, self.id)
+	cluster.call("global", ".friend", "delete_friend", client_id, self.id)
 end
 
 function REQUEST:buyItem(id)
@@ -178,19 +177,19 @@ function CMD.start(conf)
 	skynet.error(client_fd)
 	bag.init(client_id)
 	update_equip()
-	zone = skynet.call("world", "lua", "init_player", client_id, client_fd, skynet.self(), equips)
+	zone_id = cluster.call("world", ".world", "init_player", client_id, client_fd, skynet.self(), equips)
 end
 
 function CMD.disconnect()
 	bag.store_update()
-	skynet.call(zone, "lua", "quit", client_id)
+	cluster.call("zone", ".zone"..zone_id, "quit", client_id)
 	skynet.exit()
 end
 
 function CMD.drop(level, exp, items)
 	skynet.error(exp)
 	local msgs = {}
-	for k, v in pairs(items) do
+	for k, v in pairs(items or {}) do
 		skynet.error("acquire", v, k)
 		if is_equip(k) then
 			local msg = bag.acq_equip(k, v)
@@ -202,6 +201,14 @@ function CMD.drop(level, exp, items)
 		end
 	end
 	socket.send_package(client_fd, socket.send_request("drop", {level = level, exp = exp, msgs = msgs}))
+end
+
+function CMD.push(res)
+	socket.send_package(client_fd, socket.send_request("push", res))
+end
+
+function CMD.notice(id)
+	socket.send_package(client_fd, socket.send_request("notice", {id = id}))
 end
 
 skynet.start(function()

@@ -1,17 +1,16 @@
 local skynet = require "skynet"
+local cluster = require "skynet.cluster"
+local sock = require "socket"
 
 local CMD = {}
 local SOCKET = {}
 local agent = {}
 local gate
-local login
 
 function SOCKET.open(fd, addr)
                 id = "test"
 	skynet.error("New client from : " .. addr)
 	skynet.call(gate, "lua", "accept" , fd)
-	--agent[fd] = skynet.newservice("agent")
-	--skynet.call(agent[fd], "lua", "start", { gate = gate, watchdog = skynet.self(), fd = fd, id = id })
 end
 
 local function close_agent(fd)
@@ -42,10 +41,11 @@ end
 function SOCKET.data(fd, msg)
 	skynet.error("catch data: "..msg)
 	assert(string.sub(msg, 1, 1) == "C" or string.sub(msg, 1, 1) == "V", "invalid data")
-	local r = skynet.call(login, "lua", "open", fd, string.sub(msg, 2), string.sub(msg, 1, 1))
-
-	if r ~= nil then
-		agent[fd] = r.agent
+	local ret, id = cluster.call("global", ".login", "open", string.sub(msg, 2), string.sub(msg, 1, 1))
+	sock.send_package(fd, ret)
+	if id ~= nil then
+		agent[fd] = skynet.newservice("agent")
+		skynet.call(agent[fd], "lua", "start", { gate = gate, watchdog = skynet.self(), fd = fd, id = id })
 	end
 end
 
@@ -70,8 +70,5 @@ skynet.start(function()
 		end
 	end)
 
-	skynet.newservice("world")
 	gate = skynet.newservice("gate")
-	login = skynet.newservice("login")
-	skynet.call(login, "lua", "start", { gate = gate, watchdog = skynet.self() })
 end)

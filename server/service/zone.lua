@@ -1,8 +1,8 @@
 local skynet = require "skynet"
+local cluster = require "skynet.cluster"
+require "skynet.manager"
 local equation = require "equation"
-local attr = require "attr"
 local utils = require "utils"
-local socket = require "socket"
 local equip = require "equip"
 
 local CMD = {}
@@ -25,7 +25,7 @@ end
 local function store_status(id)
 	local list = {hp = entities[id].hp, mp = entities[id].mp, exp = entities[id].exp, 
 		   x = entities[id].x, y = entities[id].y, dir = entities[id].dir}
-	skynet.call("mongo", "lua", "set", "S", id, list)
+	cluster.call("db", ".mongo", "set", "S", id, list)
 end
 
 function CMD.start(id)
@@ -38,6 +38,7 @@ function CMD.start(id)
 			skynet.call(monster_services[monster_id], "lua", "start", skynet.self(), monster_id)
 		end
 	end
+	skynet.register(".zone"..id)
 end
 
 function CMD.init_player(id, info, detail_attr)
@@ -47,15 +48,14 @@ function CMD.init_player(id, info, detail_attr)
 		init_status(id)
 	end
 	if s == nil then
-		local a = attr.get_attr(id)
+		local a = cluster.call("global", ".attr", "get_attr", id)
 		detail_attrs[id] = equation.cal_detail(a, entities[id].equips)
 		detail_attrs[id].level = a.level
 	else
 		detail_attrs[id] = detail_attr
 	end
 	skynet.call(aoi, "lua", "init", id, entities[id])
-	local content = {level = detail_attrs[id].level, exp = entities[id].exp}
-	socket.send_package(entities[id].fd, socket.send_request("drop", content))
+	cluster.call("conn", entities[id].agent, "drop", detail_attrs[id].level, entities[id].exp)
 end
 
 function CMD.init_monster(id, detail_attr)
@@ -72,7 +72,8 @@ end
 
 function CMD.update_detail_attr(id, e)
 	entities[id].equips = e
-	local d = equation.cal_detail(attr.get_attr(id), e)
+	local a = cluster.call("global", ".attr", "get_attr", id)
+	local d = equation.cal_detail(a, e)
 	for k, v in pairs(d) do
 		detail_attrs[id][k] = v
 	end
@@ -103,13 +104,13 @@ local function drop(id)
 			local gain = math.min(total * v // 2, total)
 			level, entities[k].exp = equation.cal_level_exp(detail_attrs[k].level, entities[k].exp, gain)
 			if level ~= detail_attrs[k].level then
-				attr.update_attr(k, {level = level})
+				cluster.call("global", ".attr", "update_attr", k, {level = level})
 				detail_attrs[k].level = level
-				skynet.call("mongo", "lua", "set", "S", k, {exp = entities[k].exp})
+				cluster.call("db", ".mongo", "set", "S", k, {exp = entities[k].exp})
 			end
 			local items = {}
 			equip.generate(detail_attrs[id].max_level, detail_attrs[id].max_amount, items)
-			skynet.call(entities[k].agent, "lua", "drop", detail_attrs[k].level, entities[k].exp, items)
+			cluster.call("conn", entities[k].agent, "drop", detail_attrs[k].level, entities[k].exp, items)
 		end
 	end
 end
@@ -120,7 +121,7 @@ function CMD.quit(id, next)
 		if next == nil then 
 			store_status(id)
 		end
-		next_zone = skynet.call("world", "lua", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
+		next_zone = cluster.call("world", ".world", "update_zone", id, entities[id], detail_attrs[id], zone_id, next)
 		detail_attrs[id] = nil
 	else
 		drop(id)

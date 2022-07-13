@@ -1,7 +1,7 @@
 local skynet = require "skynet"
 local cluster = require "skynet.cluster"
 local sprotoloader = require "sprotoloader"
-local utils = require "common.utils"
+local utils = require "utils"
 
 local max_client = 64
 
