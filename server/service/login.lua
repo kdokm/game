@@ -14,12 +14,12 @@ function CMD.open(msg, flag)
 	skynet.error("password: "..password)
 
 	if flag == "V" then
-		local ret = skynet.call("redis", "lua", "get", "S", id, "password")
+		local ret = skynet.call("redis", "lua", "get", "P", id, "password")
 		if ret ~= password then
 			return "wrong password"
 		end
 	else
-		local ret = skynet.call("redis", "lua", "set", "S", id, "password", password, "nx")
+		local ret = skynet.call("redis", "lua", "set", "P", id, "password", password, "nx")
 		if ret == nil then
 			return "user ID already exists"
 		end
