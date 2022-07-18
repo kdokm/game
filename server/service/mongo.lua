@@ -22,15 +22,29 @@ function CMD.getall(col, key)
 	return ret
 end
 
-function CMD.set(col, key, list)
+function CMD.set(col, key, list, option)
 	skynet.error("mongo set")
-	local op = {}
-	op["$set"] = list
-	return db[col]:safe_update({_id = key}, op, true)
+	if option == "nx" then
+		list._id = key
+		return db[col]:safe_insert(list)
+	else
+		local op = {}
+		op["$set"] = list
+		return db[col]:safe_update({_id = key}, op, true)
+	end
 end
 
 function CMD.del(col, key, field)
 	skynet.error("mongo del")
+	if field ~= nil then
+		local t = {}
+		t[field] = ""
+		local op = {}
+		op["$unset"] = t
+		return db[col]:safe_update({_id = key}, op)
+	else
+		return db[col]:safe_delete({_id = key})
+	end
 end
 
 skynet.start(function()
