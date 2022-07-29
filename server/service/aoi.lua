@@ -4,10 +4,10 @@ local utils = require "utils"
 local equation = require "equation"
 
 local CMD = {}
-grids = {}
-updates = {}
-entities = {}
-services = {}
+local grids = {}
+local updates = {}
+local entities = {}
+local services = {}
 local time = 0
 local real_time
 local row_size = 100
