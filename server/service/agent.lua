@@ -28,10 +28,10 @@ function REQUEST:set_attr()
 	return {attr = a}
 end
 
-function REQUEST:getSkill()
+function REQUEST:get_skill()
 end
 
-function REQUEST:updateSkill()
+function REQUEST:update_skill()
 end
 
 function REQUEST:get_bag()
@@ -111,11 +111,11 @@ function REQUEST:delete_friend()
 	cluster.call("global", ".friend", "delete_friend", client_id, self.id)
 end
 
-function REQUEST:buyItem(id)
+function REQUEST:buy_item(id)
 	--skynet.call("trade", "lua", "buy", id)
 end
 
-function REQUEST:upEquip(id)
+function REQUEST:up_equip(id)
 end
 
 function REQUEST:handshake()
